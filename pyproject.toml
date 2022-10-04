@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "my-app"
+name = "django-csp-tracker"
 version = "0.1.0"
-description = "Project template for Django app, using Poetry."
+description = "CSP tracking and violation report endpoint."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
 maintainers = ["YunoJuno <code@yunojuno.com>"]
@@ -26,13 +26,13 @@ classifiers = [
 packages = [{ include = "my_app" }]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 django = "^3.2 || ^4.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
 coverage = "*"
-flake8 = "^3.9"
+flake8 = "*"
 flake8-bandit = "*"
 flake8-blind-except = "*"
 flake8-docstrings = "*"
