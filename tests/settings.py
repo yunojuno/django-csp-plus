@@ -14,7 +14,7 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "my_app",
+    "csp_tracker",
 )
 
 MIDDLEWARE = [
@@ -24,6 +24,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "csp_tracker.middleware.CSPMiddleware"
 ]
 
 PROJECT_DIR = path.abspath(path.join(path.dirname(__file__)))
@@ -72,3 +73,7 @@ ROOT_URLCONF = "tests.urls"
 
 if not DEBUG:
     raise Exception("This settings file can only be used with DEBUG=True")
+
+# ====
+
+CSP_TRACKER_ENABLED = True

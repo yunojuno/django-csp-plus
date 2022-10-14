@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class MyAppConfig(AppConfig):
-    name = "my_app"
-    verbose_name = "Poetry Template App"
+class CSPTrackerConfig(AppConfig):
+    name = "csp_tracker"
+    verbose_name = "CSP Tracker"
+    default_auto_field='django.db.models.BigAutoField'
