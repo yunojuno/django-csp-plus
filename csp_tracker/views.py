@@ -4,7 +4,7 @@ import logging
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from csp_tracker.models import ViolationReport
+from csp_tracker.models import ViolationReport, ViolationReportx
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +28,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     # }
     data = json.loads(request.body.decode())
     csp_report = data["csp-report"]
-    report, created = ViolationReport.objects.get_or_create(
-        # document_uri = csp_report["document-uri"],
-        # violated_directive = csp_report["violated-directive"],
-        effective_directive=csp_report["effective-directive"],
-        # original_policy = csp_report["original-policy"],
-        # disposition = csp_report["disposition"],
-        blocked_uri=csp_report["blocked-uri"],
-        # status_code = csp_report["status-code"],
-        # script_sample = csp_report["script-sample"],
-    )
-    if created:
-        # NB this is not thread-safe - but it's not significant - the
-        # absolute number isn't critical
-        report.request_count += 1
-        report.save()
+    vr = ViolationReportx(**csp_report)
+    ViolationReport.objects.save_report(vr)
     logger.debug(json.dumps(data, indent=2, sort_keys=True))
     return HttpResponse()

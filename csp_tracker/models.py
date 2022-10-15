@@ -1,6 +1,30 @@
 from __future__ import annotations
 
 from django.db import models
+from django.utils.timezone import now as tz_now
+from pydantic import BaseModel, Field
+
+
+class ViolationReportx(BaseModel):
+
+    blocked_uri: str = Field(alias="blocked-uri")
+    disposition: str = Field(alias="disposition")
+    document_uri: str = Field(alias="document-uri")
+    effective_directive: str = Field(alias="effective-directive")
+    original_policy: str = Field(alias="original-policy")
+    referrer: str = Field(alias="referrer")
+    script_sample: str = Field(alias="script-sample")
+    status_code: str = Field(alias="status-code")
+    violated_directive: str = Field(alias="violated-directive")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class DispositionChoices(models.TextChoices):
+
+    ENFORCE = ("enforce", "Enforce")
+    REPORT = ("report", "Report only")
 
 
 class DirectiveChoices(models.TextChoices):
@@ -70,15 +94,15 @@ class ViolationReportQuerySet(models.QuerySet):
 
 
 class ViolationReportManager(models.Manager):
-    def get_img_src_includes(self) -> str:
-        values = (
-            self.get_queryset()
-            # .filter(include_in_csp=True)
-            # .exclude(csp_value="")
-            # .values_list("csp_value", flat=True)
-            .distinct()
+    def save_report(self, payload: ViolationReportx) -> ViolationReport:
+        report, _ = ViolationReport.objects.get_or_create(
+            effective_directive=payload.effective_directive,
+            blocked_uri=payload.blocked_uri,
         )
-        return " ".join(values)
+        report.request_count += 1
+        report.last_updated_at = tz_now()
+        report.save()
+        return report
 
 
 class ViolationReport(models.Model):
@@ -99,16 +123,12 @@ class ViolationReport(models.Model):
     #     }
     # }
     document_uri = models.URLField()
-    # violated_directive = models.TextField()
     effective_directive = models.TextField()
-    # original_policy = models.TextField()
     disposition = models.CharField(max_length=12)
     blocked_uri = models.URLField()
-    # line_number = models.PositiveBigIntegerField(blank=True, null=True)
-    # source_file = models.URLField()
-    # status_code = models.PositiveIntegerField()
-    # script_sample = models.CharField(max_length=40)
-    request_count = models.IntegerField(default=1)
+    request_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=tz_now)
+    last_updated_at = models.DateTimeField(default=tz_now)
 
     objects = ViolationReportManager.from_queryset(ViolationReportQuerySet)()
 

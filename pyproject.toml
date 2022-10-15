@@ -28,6 +28,7 @@ packages = [{ include = "csp_tracker" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 django = "^3.2 || ^4.0"
+pydantic = "^1.10.2"
 
 [tool.poetry.dev-dependencies]
 black = "*"
