@@ -1,0 +1,11 @@
+[
+  {
+    "model": "csp_tracker.csprule",
+    "pk": 1,
+    "fields": {
+      "directive": "img-src",
+      "value": "https://yunojuno-prod-assets.s3.amazonaws.com/images/",
+      "enabled": true
+    }
+  }
+]

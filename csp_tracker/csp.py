@@ -1,22 +1,24 @@
-from collections import defaultdict
+from __future__ import annotations
 
 from django.core.cache import cache
 from django.urls import reverse
 
-from .models import DEFAULT_CSP, CspRule
+from .models import CspRule, DirectiveChoices
 
 CACHE_KEY = "csp"
 DEFAULT_REPORT_URI = reverse("csp_report_uri")
 
 
-def build_csp(
-    default: str = DEFAULT_CSP.as_directive, report_uri: str = DEFAULT_REPORT_URI
-) -> str:
+def default_csp() -> dict[str, list[str]]:
+    return {d.value: ["'self'"] for d in DirectiveChoices.values}
+
+
+def build_csp(report_uri: str = DEFAULT_REPORT_URI) -> str:
     rules = CspRule.objects.enabled().values_list("directive", "value").distinct()
-    csp_rules = defaultdict(list)
+    csp_rules = default_csp()
     for directive, value in rules:
         csp_rules[directive].append(value)
-    csp = [default]
+    csp = []
     for directive, values in csp_rules.items():
         csp.append(f"{directive} {' '.join(values)}")
     csp.append(f"report-uri {report_uri}")

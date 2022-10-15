@@ -85,6 +85,10 @@ class CspRule(models.Model):
     def as_directive(self) -> str:
         return f"{self.directive} {self.value}"
 
+    @classmethod
+    def default_directives(self) -> dict[str, str]:
+        return {d: "self" for d in DirectiveChoices.names}
+
 
 # default rule in the absence of all others
 DEFAULT_CSP = CspRule(directive=DirectiveChoices.DEFAULT_SRC, value="'self'")
