@@ -5,7 +5,7 @@ from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field
 
 
-class ViolationReportx(BaseModel):
+class CspReportx(BaseModel):
 
     blocked_uri: str = Field(alias="blocked-uri")
     disposition: str = Field(alias="disposition")
@@ -75,6 +75,7 @@ class CspRule(models.Model):
     objects = CspRuleManager.from_queryset(CspRuleQuerySet)()
 
     class Meta:
+        verbose_name = "CSP Rule"
         unique_together = ("value", "directive")
 
     def __str__(self) -> str:
@@ -89,13 +90,13 @@ class CspRule(models.Model):
 DEFAULT_CSP = CspRule(directive=DirectiveChoices.DEFAULT_SRC, value="'self'")
 
 
-class ViolationReportQuerySet(models.QuerySet):
+class CspReportQuerySet(models.QuerySet):
     pass
 
 
-class ViolationReportManager(models.Manager):
-    def save_report(self, payload: ViolationReportx) -> ViolationReport:
-        report, _ = ViolationReport.objects.get_or_create(
+class CspReportManager(models.Manager):
+    def save_report(self, payload: CspReportx) -> CspReport:
+        report, _ = CspReport.objects.get_or_create(
             effective_directive=payload.effective_directive,
             blocked_uri=payload.blocked_uri,
         )
@@ -105,7 +106,7 @@ class ViolationReportManager(models.Manager):
         return report
 
 
-class ViolationReport(models.Model):
+class CspReport(models.Model):
 
     # {
     #     'csp-report': {
@@ -130,9 +131,10 @@ class ViolationReport(models.Model):
     created_at = models.DateTimeField(default=tz_now)
     last_updated_at = models.DateTimeField(default=tz_now)
 
-    objects = ViolationReportManager.from_queryset(ViolationReportQuerySet)()
+    objects = CspReportManager.from_queryset(CspReportQuerySet)()
 
     class Meta:
+        verbose_name = "CSP Violation"
         unique_together = ("effective_directive", "blocked_uri")
 
     def __str__(self) -> str:

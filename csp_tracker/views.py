@@ -4,7 +4,7 @@ import logging
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from csp_tracker.models import ViolationReport, ViolationReportx
+from csp_tracker.models import CspReport, CspReportx
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     # }
     data = json.loads(request.body.decode())
     csp_report = data["csp-report"]
-    vr = ViolationReportx(**csp_report)
-    ViolationReport.objects.save_report(vr)
+    vr = CspReportx(**csp_report)
+    CspReport.objects.save_report(vr)
     logger.debug(json.dumps(data, indent=2, sort_keys=True))
     return HttpResponse()

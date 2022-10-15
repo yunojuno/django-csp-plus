@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import HttpRequest
 
-from .models import CspRule, CspRuleQuerySet, ViolationReport, ViolationReportQuerySet
+from .models import CspReport, CspReportQuerySet, CspRule, CspRuleQuerySet
 
 
 @admin.register(CspRule)
@@ -29,8 +29,8 @@ class CspRuleAdmin(admin.ModelAdmin):
         self.message_user(request, f"Disabled {count} rules.")
 
 
-@admin.register(ViolationReport)
-class ViolationReportAdmin(admin.ModelAdmin):
+@admin.register(CspReport)
+class CspReportAdmin(admin.ModelAdmin):
     list_display = ("effective_directive", "blocked_uri", "request_count")
     readonly_fields = (
         "document_uri",
@@ -42,7 +42,7 @@ class ViolationReportAdmin(admin.ModelAdmin):
     actions = ("add_rule",)
 
     @admin.action(description="Add new CSP rule for selected violations.")
-    def add_rule(self, request: HttpRequest, queryset: ViolationReportQuerySet) -> None:
+    def add_rule(self, request: HttpRequest, queryset: CspReportQuerySet) -> None:
         for report in queryset:
             CspRule.objects.create(
                 directive=report.effective_directive,
