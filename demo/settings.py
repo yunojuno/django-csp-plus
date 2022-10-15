@@ -1,7 +1,5 @@
 from os import path
 
-from tests.settings import CSP_TRACKER_ENABLED
-
 DEBUG = True
 TEMPLATE_DEBUG = True
 USE_TZ = True
@@ -26,7 +24,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "csp_tracker.middleware.CSPMiddleware"
+    "csp_tracker.middleware.CSPMiddleware",
 ]
 
 PROJECT_DIR = path.abspath(path.join(path.dirname(__file__)))
