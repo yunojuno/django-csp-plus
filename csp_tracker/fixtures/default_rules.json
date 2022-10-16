@@ -1,11 +1,103 @@
 [
-  {
-    "model": "csp_tracker.csprule",
-    "pk": 1,
-    "fields": {
-      "directive": "img-src",
-      "value": "https://yunojuno-prod-assets.s3.amazonaws.com/images/",
-      "enabled": true
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 1,
+        "fields": { "directive": "default-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 2,
+        "fields": { "directive": "child-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 3,
+        "fields": { "directive": "connect-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 4,
+        "fields": { "directive": "font-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 5,
+        "fields": { "directive": "frame-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 6,
+        "fields": { "directive": "img-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 7,
+        "fields": { "directive": "manifest-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 8,
+        "fields": { "directive": "media-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 9,
+        "fields": { "directive": "object-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 10,
+        "fields": { "directive": "prefetch-src", "value": "'self'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 11,
+        "fields": { "directive": "script-src", "value": "'self' 'unsafe-inline'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 12,
+        "fields": {
+            "directive": "script-src-elem",
+            "value": "'self' 'unsafe-inline'",
+            "enabled": true
+        }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 13,
+        "fields": {
+            "directive": "script-src-attr",
+            "value": "'self' 'unsafe-inline'",
+            "enabled": true
+        }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 14,
+        "fields": { "directive": "style-src", "value": "'self' 'unsafe-inline'", "enabled": true }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 15,
+        "fields": {
+            "directive": "style-src-elem",
+            "value": "'self' 'unsafe-inline'",
+            "enabled": true
+        }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 16,
+        "fields": {
+            "directive": "style-src-attr",
+            "value": "'self' 'unsafe-inline'",
+            "enabled": true
+        }
+    },
+    {
+        "model": "csp_tracker.csprule",
+        "pk": 17,
+        "fields": { "directive": "worker-src", "value": "'self'", "enabled": true }
     }
-  }
 ]
