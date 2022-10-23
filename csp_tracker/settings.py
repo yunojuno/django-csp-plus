@@ -1,12 +1,17 @@
-DEFAULT_CHILD_SRC = "'self'"
-DEFAULT_CONNECT_SRC = "'self'"
-DEFAULT_DEFAULT_SRC = "'self'"
-DEFAULT_FONT_SRC = "'self'"
-DEFAULT_FRAME_SRC = "'self'"
-DEFAULT_IMG_SRC = "'self'"
-DEFAULT_MANIFEST_SRC = "'self'"
-DEFAULT_MEDIA_SRC = "'self'"
-DEFAULT_OBJECT_SRC = "'self'"
-DEFAULT_SCRIPT_SRC = "'self' 'unsafe-inline'"
-DEFAULT_STYLE_SRC = "'self' 'unsafe-inline'"
-DEFAULT_WORKER_SRC = "'self'"
+from django.conf import settings
+
+CSP_ENABLED = getattr(settings, "CSP_ENABLED", False)
+
+DEFAULT_RULES: dict[str, list[str]] = getattr(settings, "CSP_DEFAULTS", {})
+DEFAULT_RULES.setdefault("child-src", ["'self'"])
+DEFAULT_RULES.setdefault("connect-src", ["'self'"])
+DEFAULT_RULES.setdefault("default-src", ["'self'"])
+DEFAULT_RULES.setdefault("font-src", ["'self'", "'unsafe-inline'"])
+DEFAULT_RULES.setdefault("frame-src", ["'self'"])
+DEFAULT_RULES.setdefault("img-src", ["'self'"])
+DEFAULT_RULES.setdefault("manifest-src", ["'self'"])
+DEFAULT_RULES.setdefault("media-src", ["'self'"])
+DEFAULT_RULES.setdefault("object-src", ["'self'"])
+DEFAULT_RULES.setdefault("script-src", ["'self'", "'unsafe-inline'"])
+DEFAULT_RULES.setdefault("style-src", ["'self'", "'unsafe-inline'"])
+DEFAULT_RULES.setdefault("worker-src", ["'self'"])

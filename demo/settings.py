@@ -74,4 +74,26 @@ ROOT_URLCONF = "demo.urls"
 if not DEBUG:
     raise Exception("This settings file can only be used with DEBUG=True")
 
-CSP_TRACKER_ENABLED = True
+#  ===
+
+CSP_ENABLED = True
+CSP_DEFAULTS = {
+    "child-src": ["'self'"],
+    "connect-src": ["'self'"],
+    "default-src": ["'self'"],
+    "font-src": ["'self'", "'unsafe-inline'"],
+    "frame-src": ["'self'"],
+    "img-src": ["'self'"],
+    "manifest-src": ["'self'"],
+    "media-src": ["'self'"],
+    "object-src": ["'self'"],
+    "prefetch-src": ["'self'"],
+    "script-src": ["'self'", "'unsafe-inline'"],
+    "script-src-elem": ["'self'", "'unsafe-inline'"],
+    "script-src-attr": ["'self'", "'unsafe-inline'"],
+    "style-src": ["'self'", "'unsafe-inline'"],
+    "style-src-attr": ["'self'", "'unsafe-inline'"],
+    "style-src-elem": ["'self'", "'unsafe-inline'"],
+    "worker-src": ["'self'"],
+}
+CSP_REPORT_ONLY = True

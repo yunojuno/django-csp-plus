@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from django.db import models
+from django.db.models import F
 from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field
 
 
-class CspReportx(BaseModel):
+class ReportData(BaseModel):
 
     blocked_uri: str = Field(alias="blocked-uri")
     disposition: str = Field(alias="disposition")
@@ -99,12 +100,12 @@ class CspReportQuerySet(models.QuerySet):
 
 
 class CspReportManager(models.Manager):
-    def save_report(self, payload: CspReportx) -> CspReport:
+    def save_report(self, data: ReportData) -> CspReport:
         report, _ = CspReport.objects.get_or_create(
-            effective_directive=payload.effective_directive,
-            blocked_uri=payload.blocked_uri,
+            effective_directive=data.effective_directive,
+            blocked_uri=data.blocked_uri,
         )
-        report.request_count += 1
+        report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
         report.save()
         return report

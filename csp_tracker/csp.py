@@ -3,19 +3,16 @@ from __future__ import annotations
 from django.core.cache import cache
 from django.urls import reverse
 
-from .models import CspRule, DirectiveChoices
+from .models import CspRule
+from .settings import DEFAULT_RULES
 
 CACHE_KEY = "csp"
 DEFAULT_REPORT_URI = reverse("csp_report_uri")
 
 
-def default_csp() -> dict[str, list[str]]:
-    return {d.value: ["'self'"] for d in DirectiveChoices.values}
-
-
 def build_csp(report_uri: str = DEFAULT_REPORT_URI) -> str:
     rules = CspRule.objects.enabled().values_list("directive", "value").distinct()
-    csp_rules = default_csp()
+    csp_rules = DEFAULT_RULES
     for directive, value in rules:
         csp_rules[directive].append(value)
     csp = []
@@ -29,5 +26,5 @@ def get_csp() -> str:
     if csp := cache.get(CACHE_KEY):
         return csp
     csp = build_csp()
-    cache.set(CACHE_KEY, csp)
+    cache.set(CACHE_KEY, csp, 1)
     return get_csp()

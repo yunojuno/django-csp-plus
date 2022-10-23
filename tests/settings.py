@@ -76,4 +76,18 @@ if not DEBUG:
 
 # ====
 
-CSP_TRACKER_ENABLED = True
+CSP_ENABLED = True
+CSP_DEFAULTS = {
+    "child-src": ["'self'"],
+    "connect-src": ["'self'"],
+    "default-src": ["'self'"],
+    "font-src": ["'self'", "'unsafe-inline'"],
+    "frame-src": ["'self'"],
+    "img-src": ["'self'"],
+    "manifest-src": ["'self'"],
+    "media-src": ["'self'"],
+    "object-src": ["'self'"],
+    "script-src": ["'self'", "'unsafe-inline'"],
+    "style-src": ["'self'", "'unsafe-inline'"],
+    "worker-src": ["'self'"],
+}
