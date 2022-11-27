@@ -20,6 +20,9 @@ class CspRuleAdmin(admin.ModelAdmin):
     ) -> None:
         count = queryset.update(enabled=True)
         self.message_user(request, f"Enabled {count} rules.")
+        from .csp import refresh_cache
+
+        refresh_cache()
 
     @admin.action(description="Disable selected CSP rules")
     def disable_selected_rules(
@@ -27,6 +30,9 @@ class CspRuleAdmin(admin.ModelAdmin):
     ) -> None:
         count = queryset.update(enabled=False)
         self.message_user(request, f"Disabled {count} rules.")
+        from .csp import refresh_cache
+
+        refresh_cache()
 
 
 @admin.register(CspReport)
