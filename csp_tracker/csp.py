@@ -1,24 +1,25 @@
 from __future__ import annotations
 
 from django.core.cache import cache
-from django.urls import reverse
 
 from .models import CspRule
-from .settings import CSP_CACHE_TIMEOUT, DEFAULT_RULES
+from .settings import CSP_CACHE_TIMEOUT, CSP_REPORT_URI, DEFAULT_RULES
 
-CACHE_KEY = "csp"
-DEFAULT_REPORT_URI = reverse("csp_report_uri")
+CACHE_KEY = "csp::rules"
 
 
-def build_csp(report_uri: str = DEFAULT_REPORT_URI) -> str:
+def build_csp() -> str:
     rules = CspRule.objects.enabled().values_list("directive", "value").distinct()
     csp_rules = DEFAULT_RULES
     for directive, value in rules:
         csp_rules[directive].append(value)
     csp = []
     for directive, values in csp_rules.items():
-        csp.append(f"{directive} {' '.join(set(values))}")
-    csp.append(f"report-uri {report_uri}")
+        if not values:
+            continue
+        value_str = " ".join(sorted(values))
+        csp.append(f"{directive} {value_str}")
+    csp.append(f"report-uri {CSP_REPORT_URI}")
     return "; ".join(csp)
 
 

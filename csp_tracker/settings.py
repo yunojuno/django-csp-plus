@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.urls import reverse
 
 CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 
@@ -24,4 +25,10 @@ DEFAULT_RULES: dict[str, list[str]] = getattr(
         "script-src": ["self"],
         "style-src": ["self"],
     },
+)
+
+
+# default report-uri is this app, but can be overridden
+CSP_REPORT_URI = getattr(
+    settings, "CSP_REPORT_URI", reverse("csp_tracker:csp_report_uri")
 )
