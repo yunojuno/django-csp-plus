@@ -57,7 +57,7 @@ or
 
 ```
 $ poetry shell
-(csp_tracker) $ pytest
+(csp) $ pytest
 ```
 
 The full suite is controlled by `tox`, which contains a set of

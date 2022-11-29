@@ -7,5 +7,5 @@ admin.autodiscover()
 urlpatterns = [
     path("", debug.default_urlconf),
     path("admin/", admin.site.urls),
-    path("csp/", include("csp_tracker.urls")),
+    path("csp/", include("csp.urls")),
 ]

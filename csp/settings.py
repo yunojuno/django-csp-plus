@@ -29,6 +29,4 @@ DEFAULT_RULES: dict[str, list[str]] = getattr(
 
 
 # default report-uri is this app, but can be overridden
-CSP_REPORT_URI = getattr(
-    settings, "CSP_REPORT_URI", reverse("csp_tracker:csp_report_uri")
-)
+CSP_REPORT_URI = getattr(settings, "CSP_REPORT_URI", reverse("csp:csp_report_uri"))

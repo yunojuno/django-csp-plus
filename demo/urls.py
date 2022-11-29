@@ -3,7 +3,7 @@ from django.urls import path
 from django.views import debug
 from django.views.generic import TemplateView
 
-from csp_tracker.views import report_uri
+from csp.views import report_uri
 
 admin.autodiscover()
 

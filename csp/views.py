@@ -4,7 +4,7 @@ import logging
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from csp_tracker.models import CspReport, ReportData
+from csp.models import CspReport, ReportData
 
 logger = logging.getLogger(__name__)
 

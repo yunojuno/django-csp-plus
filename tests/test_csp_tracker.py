@@ -3,8 +3,8 @@ from unittest import mock
 import pytest
 from django.core.cache import cache
 
-from csp_tracker import csp
-from csp_tracker import settings as csp_settings
+from csp import csp
+from csp import settings as csp_settings
 
 
 @pytest.mark.django_db
@@ -30,7 +30,7 @@ class TestCsp:
             )
         )
 
-    @mock.patch("csp_tracker.csp.DEFAULT_RULES", {})
+    @mock.patch("csp.csp.DEFAULT_RULES", {})
     def test_build_csp(self):
         assert csp.build_csp() == f"report-uri {csp_settings.CSP_REPORT_URI}"
 
@@ -38,7 +38,7 @@ class TestCsp:
         cache.delete(csp.CACHE_KEY)
         val = csp.get_csp()
         assert csp.CACHE_KEY in cache
-        with mock.patch("csp_tracker.csp.refresh_cache") as mock_refresh:
+        with mock.patch("csp.csp.refresh_cache") as mock_refresh:
             assert csp.get_csp() == val
             mock_refresh.assert_not_called()
         cache.delete(csp.CACHE_KEY)
