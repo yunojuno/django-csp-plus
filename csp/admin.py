@@ -14,25 +14,26 @@ class CspRuleAdmin(admin.ModelAdmin):
     def _enabled(self, obj: CspRule) -> bool:
         return obj.enabled
 
+    def clear_cache(self) -> None:
+        from .policy import clear_cache as clear_csp_cache
+
+        clear_csp_cache()
+
     @admin.action(description="Enable selected CSP rules")
     def enable_selected_rules(
         self, request: HttpRequest, queryset: CspRuleQuerySet
     ) -> None:
         count = queryset.update(enabled=True)
+        self.clear_cache()
         self.message_user(request, f"Enabled {count} rules.")
-        from .csp import refresh_cache
-
-        refresh_cache()
 
     @admin.action(description="Disable selected CSP rules")
     def disable_selected_rules(
         self, request: HttpRequest, queryset: CspRuleQuerySet
     ) -> None:
         count = queryset.update(enabled=False)
+        self.clear_cache()
         self.message_user(request, f"Disabled {count} rules.")
-        from .csp import refresh_cache
-
-        refresh_cache()
 
 
 @admin.register(CspReport)

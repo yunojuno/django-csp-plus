@@ -76,7 +76,7 @@ if not DEBUG:
 
 #  ===
 
-CSP_ENABLED = True
+CSP_CACHE_TIMEOUT = 10
 CSP_DEFAULTS = {
     "child-src": ["'self'"],
     "connect-src": ["'self'"],
@@ -88,7 +88,7 @@ CSP_DEFAULTS = {
     "media-src": ["'self'"],
     "object-src": ["'self'"],
     "prefetch-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'"],
+    "script-src": ["'self'", "'unsafe-inline'", "'nonce-{csp_nonce}'"],
     "script-src-elem": ["'self'", "'unsafe-inline'"],
     "script-src-attr": ["'self'", "'unsafe-inline'"],
     "style-src": ["'self'", "'unsafe-inline'"],
@@ -96,4 +96,5 @@ CSP_DEFAULTS = {
     "style-src-elem": ["'self'", "'unsafe-inline'"],
     "worker-src": ["'self'"],
 }
-CSP_REPORT_ONLY = True
+CSP_ENABLED = True
+CSP_REPORT_ONLY = False

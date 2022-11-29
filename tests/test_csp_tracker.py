@@ -3,14 +3,14 @@ from unittest import mock
 import pytest
 from django.core.cache import cache
 
-from csp import csp
+from csp import policy
 from csp import settings as csp_settings
 
 
 @pytest.mark.django_db
 class TestCsp:
     def test_default_csp(self):
-        assert csp.build_csp() == (
+        assert policy.build_csp() == (
             "; ".join(
                 [
                     "child-src 'self'",
@@ -25,20 +25,16 @@ class TestCsp:
                     "script-src 'self' 'unsafe-inline'",
                     "style-src 'self' 'unsafe-inline'",
                     "worker-src 'self'",
-                    f"report-uri {csp_settings.CSP_REPORT_URI}",
+                    f"report-uri {csp_settings.get_report_uri()}",
                 ]
             )
         )
 
-    @mock.patch("csp.csp.DEFAULT_RULES", {})
-    def test_build_csp(self):
-        assert csp.build_csp() == f"report-uri {csp_settings.CSP_REPORT_URI}"
-
     def test_get_csp(self):
-        cache.delete(csp.CACHE_KEY)
-        val = csp.get_csp()
-        assert csp.CACHE_KEY in cache
-        with mock.patch("csp.csp.refresh_cache") as mock_refresh:
-            assert csp.get_csp() == val
+        cache.delete(policy.CACHE_KEY)
+        val = policy.get_csp()
+        assert policy.CACHE_KEY in cache
+        with mock.patch("csp.policy.refresh_cache") as mock_refresh:
+            assert policy.get_csp() == val
             mock_refresh.assert_not_called()
-        cache.delete(csp.CACHE_KEY)
+        cache.delete(policy.CACHE_KEY)

@@ -53,19 +53,12 @@ class CspRuleQuerySet(models.QuerySet):
     def enabled(self) -> CspRuleQuerySet:
         return self.filter(enabled=True)
 
+    def directive_values(self) -> models.ValuesQuerySet:
+        return self.values_list("directive", "value")
+
 
 class CspRuleManager(models.Manager):
-    def get_directive_values(self, directive: str) -> str:
-        return " ".join(
-            self.get_queryset()
-            .filter(enabled=True)
-            .filter(directive=directive)
-            .values_list("value", flat=True)
-        )
-
-    def get_directive(self, directive: str) -> str:
-        values = self.get_directive_values(directive)
-        return f"{directive} {values};"
+    pass
 
 
 class CspRule(models.Model):
