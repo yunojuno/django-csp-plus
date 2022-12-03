@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.http import HttpRequest
 
-from .models import CspReport, CspReportQuerySet, CspRule, CspRuleQuerySet
+from .models import (
+    CspReport,
+    CspReportQuerySet,
+    CspRule,
+    CspRuleQuerySet,
+    convert_report,
+)
 
 
 @admin.register(CspRule)
@@ -50,10 +56,14 @@ class CspReportAdmin(admin.ModelAdmin):
 
     @admin.action(description="Add new CSP rule for selected violations.")
     def add_rule(self, request: HttpRequest, queryset: CspReportQuerySet) -> None:
+        created: list[CspRule] = []
+        duplicates = 0
         for report in queryset:
-            CspRule.objects.create(
-                directive=report.effective_directive,
-                value=report.blocked_uri,
-                enabled=True,
-            )
-        self.message_user(request, "Created new rules.")
+            if rule := convert_report(report, enable=True):
+                created.append(rule)
+            else:
+                duplicates += 1
+        if created:
+            self.message_user(request, f"Created {len(created)} new rules.", "success")
+        if duplicates:
+            self.message_user(request, f"Ignored {duplicates} duplicates.", "warning")

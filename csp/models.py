@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from django.db import models
 from django.db.models import F
+from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class ReportData(BaseModel):
@@ -62,6 +67,30 @@ class CspRuleManager(models.Manager):
 
 
 class CspRule(models.Model):
+
+    REQUIRE_SINGLE_QUOTE = [
+        "nonce",
+        "none",
+        "report-sample",
+        "self",
+        "strict-dynamic",
+        "unsafe-eval",
+        "unsafe-hashes",
+        "unsafe-inline",
+        "wasm-unsafe-eval",
+    ]
+    REQUIRE_TRAILING_COLON = [
+        "http",
+        "https",
+        "wss",
+        "blob",
+        "data",
+        "mediastream",
+        "filesystem",
+    ]
+    # require the "unsafe-" prefix
+    REQUIRE_UNSAFE_PREFIX = ["inline", "eval"]
+
     directive = models.CharField(max_length=50, choices=DirectiveChoices.choices)
     value = models.CharField(max_length=255)
     enabled = models.BooleanField(default=False)
@@ -71,21 +100,21 @@ class CspRule(models.Model):
     class Meta:
         verbose_name = "CSP Rule"
         unique_together = ("value", "directive")
+        ordering = ["directive", "value"]
 
     def __str__(self) -> str:
         return f"{self.directive} {self.value}"
 
-    @property
-    def as_directive(self) -> str:
-        return f"{self.directive} {self.value}"
-
     @classmethod
-    def default_directives(self) -> dict[str, str]:
-        return {d: "self" for d in DirectiveChoices.names}
-
-
-# default rule in the absence of all others
-DEFAULT_CSP = CspRule(directive=DirectiveChoices.DEFAULT_SRC, value="'self'")
+    def clean_value(cls, value: str) -> str:
+        value = value.lower()
+        if value in cls.REQUIRE_SINGLE_QUOTE:
+            return f"'{value}'"
+        if value in cls.REQUIRE_TRAILING_COLON:
+            return f"{value}:"
+        if value in cls.REQUIRE_UNSAFE_PREFIX:
+            return f"'unsafe-{value}'"
+        return value
 
 
 class CspReportQuerySet(models.QuerySet):
@@ -96,7 +125,7 @@ class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport:
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
-            blocked_uri=data.blocked_uri,
+            blocked_uri=data.blocked_uri[:200],
         )
         report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
@@ -140,3 +169,24 @@ class CspReport(models.Model):
             f"CSP violation: {self.effective_directive} - "
             f"{self.blocked_uri} [{self.request_count}]"
         )
+
+
+def convert_report(report: CspReport, enable: bool = True) -> CspRule | None:
+    """Convert report to a rule and deletion the violation."""
+    logger.debug("Converting violation report to new rule.")
+    try:
+        value = CspRule.clean_value(report.blocked_uri)
+        rule = CspRule.objects.create(
+            directive=report.effective_directive,
+            value=value,
+            enabled=enable,
+        )
+    except IntegrityError:
+        # duplicate rule
+        logger.debug("Duplicate rule error, aborting.")
+        return None
+    else:
+        # once we have saved the rule, we delete the report
+        logger.debug("Rule created, deleting violation report.")
+        report.delete()
+        return rule

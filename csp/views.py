@@ -1,7 +1,6 @@
 import json
 import logging
 
-from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -40,7 +39,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:
 def diagnostics(request: HttpRequest) -> HttpResponse:
     default_rules = get_default_rules()
     extra_rules = list(CspRule.objects.enabled().directive_values())
-    csp = get_csp().format(csp_nonce=request.csp_nonce)
+    csp = get_csp(getattr(request, "csp_nonce", ""))
     return render(
         request,
         "diagnostics.txt",
@@ -48,7 +47,6 @@ def diagnostics(request: HttpRequest) -> HttpResponse:
             "default_rules": default_rules,
             "extra_rules": extra_rules,
             "csp": csp,
-            "CSP_DEFAULTS": settings.CSP_DEFAULTS,
         },
         content_type="text/plain",
     )
