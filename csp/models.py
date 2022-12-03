@@ -138,10 +138,11 @@ class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport:
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
-            document_uri=data.document_uri[:200],
             blocked_uri=data.blocked_uri[:200],
-            disposition=data.disposition,
         )
+        # we udpate with the latest page that has caused the violation
+        report.document_ur = data.document_uri[:200]
+        report.disposition = data.disposition
         report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
         report.save()
