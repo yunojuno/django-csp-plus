@@ -50,6 +50,9 @@ class CspReportAdmin(admin.ModelAdmin):
         "effective_directive",
         "disposition",
         "blocked_uri",
+        "created_at",
+        "last_updated_at",
+        "request_count",
     )
     list_filter = ("effective_directive",)
     actions = ("add_rule",)

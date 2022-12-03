@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from urllib.parse import urlparse, urlunparse
 
 from django.db import models
 from django.db.models import F
@@ -106,6 +107,15 @@ class CspRule(models.Model):
         return f"{self.directive} {self.value}"
 
     @classmethod
+    def clean_url(cls, value: str) -> str:
+        # we got here, let's see if we have a URL, and if we do,
+        # strip off the querystring, params, as they are ignored.
+        scheme, netloc, path, _, _, _ = urlparse(value)
+        if any([scheme, netloc, path]):
+            return urlunparse((scheme, netloc, path, "", "", ""))
+        return ""
+
+    @classmethod
     def clean_value(cls, value: str) -> str:
         value = value.lower()
         if value in cls.REQUIRE_SINGLE_QUOTE:
@@ -114,6 +124,9 @@ class CspRule(models.Model):
             return f"{value}:"
         if value in cls.REQUIRE_UNSAFE_PREFIX:
             return f"'unsafe-{value}'"
+        if source := cls.clean_url(value):
+            return source
+        # not sure what we have here - let it go through
         return value
 
 
@@ -125,7 +138,9 @@ class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport:
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
+            document_uri=data.document_uri[:200],
             blocked_uri=data.blocked_uri[:200],
+            disposition=data.disposition,
         )
         report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
@@ -183,7 +198,8 @@ def convert_report(report: CspReport, enable: bool = True) -> CspRule | None:
         )
     except IntegrityError:
         # duplicate rule
-        logger.debug("Duplicate rule error, aborting.")
+        logger.debug("Duplicate rule found, deleting violation report.")
+        report.delete()
         return None
     else:
         # once we have saved the rule, we delete the report
