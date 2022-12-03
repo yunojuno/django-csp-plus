@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from django.core.cache import cache
 
-from .models import CspRule
+from .models import CspRule, DirectiveChoices
 from .settings import CSP_CACHE_TIMEOUT, get_default_rules, get_report_uri
 
 logger = logging.getLogger(__name__)
@@ -56,8 +56,11 @@ def build_csp() -> CspDict:
     new_rules = CspRule.objects.enabled().directive_values()
     # update the defaults with the additional rules.
     for directive, value in new_rules:
-        logger.debug('Adding "%s" to directive "%s"', value, directive)
-        csp_rules[directive].append(value)
+        if directive in DirectiveChoices.values:
+            logger.debug('Adding "%s" to directive "%s"', value, directive)
+            csp_rules[directive].append(value)
+        else:
+            logger.debug('Ignoring unknown directive "%s"', directive)
     # format and dedupe the values
     return {k: dedupe_expressions(v) for k, v in csp_rules.items()}
 
@@ -70,10 +73,11 @@ def format_csp_header(csp: CspDict, nonce: str | None = None) -> str:
         # dedupe and recombine into a single space-delimited string
         value_str = " ".join(values)
         if nonce:
-            value_str.replace("nonce", f"nonce-{nonce}")
+            value_str = value_str.replace("nonce", f"nonce-{nonce}")
         directives.append(f"{directive} {value_str}")
     # csp is now a list of directives - the report-uri comes last
-    directives.append(f"report-uri {get_report_uri()}")
+    if report_uri := get_report_uri():
+        directives.append(f"report-uri {report_uri}")
     return "; ".join(directives).strip()
 
 
