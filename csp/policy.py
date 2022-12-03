@@ -6,16 +6,16 @@ from collections import defaultdict
 from django.core.cache import cache
 
 from .models import CspRule, DirectiveChoices
-from .settings import CSP_CACHE_TIMEOUT, get_default_rules, get_report_uri
+from .settings import CSP_CACHE_TIMEOUT, get_default_rules
 
 logger = logging.getLogger(__name__)
 
 CACHE_KEY = "csp::rules"
-CspDict = dict[str, list[str]]
+PolicyType = dict[str, list[str]]
 
 
 def clear_cache() -> None:
-    """Refresh the cached CSP."""
+    """Clear the cached CSP."""
     logger.debug("Clearing CSP cache")
     cache.delete(CACHE_KEY)
 
@@ -23,14 +23,16 @@ def clear_cache() -> None:
 def refresh_cache() -> None:
     """Refresh the cached CSP."""
     logger.debug("Refreshing CSP cache")
-    cache.set(CACHE_KEY, build_csp(), CSP_CACHE_TIMEOUT)
+    policy = build_policy()
+    csp_header = format_as_csp(policy)
+    cache.set(CACHE_KEY, csp_header, CSP_CACHE_TIMEOUT)
 
 
-def dedupe_expressions(values: list[str]) -> list[str]:
+def _dedupe(values: list[str]) -> list[str]:
     return list({CspRule.clean_value(v) for v in values})
 
 
-def build_csp() -> CspDict:
+def build_policy() -> PolicyType:
     """
     Build the CSP by combining default settings and CspRules.
 
@@ -50,42 +52,39 @@ def build_csp() -> CspDict:
     """
     logger.debug("Building new CSP")
     # return dict of {directive: [values]}
-    csp_rules: CspDict = defaultdict(list)
-    csp_rules.update(get_default_rules())
+    policy: PolicyType = defaultdict(list)
+    policy.update(get_default_rules())
     # returns list of additional (directive, value) tuples.
     new_rules = CspRule.objects.enabled().directive_values()
     # update the defaults with the additional rules.
     for directive, value in new_rules:
         if directive in DirectiveChoices.values:
             logger.debug('Adding "%s" to directive "%s"', value, directive)
-            csp_rules[directive].append(value)
+            policy[directive].append(value)
         else:
             logger.debug('Ignoring unknown directive "%s"', directive)
     # format and dedupe the values
-    return {k: dedupe_expressions(v) for k, v in csp_rules.items()}
+    return {k: _dedupe(v) for k, v in policy.items()}
 
 
-def format_csp_header(csp: CspDict, nonce: str | None = None) -> str:
+def format_as_csp(policy: PolicyType) -> str:
+    """Convert policty dict into response header string."""
     directives = []
-    for directive, values in csp.items():
+    for directive, values in policy.items():
         if not values:
             continue
         # dedupe and recombine into a single space-delimited string
         value_str = " ".join(values)
-        if nonce:
-            value_str = value_str.replace("nonce", f"nonce-{nonce}")
         directives.append(f"{directive} {value_str}")
-    # csp is now a list of directives - the report-uri comes last
-    if report_uri := get_report_uri():
-        directives.append(f"report-uri {report_uri}")
+    # csp is now a list of directives
     return "; ".join(directives).strip()
 
 
-def get_csp(nonce: str | None = None) -> str:
+def get_csp() -> str:
     """Fetch the CSP from the cache, or rebuild if it's missing."""
     if csp := cache.get(CACHE_KEY):
         logger.debug("Found cached CSP")
-        return format_csp_header(csp, nonce)
-    logger.debug("No cached CSP found")
+        return csp
+    logger.debug("No cached CSP - rebuilding policy")
     refresh_cache()
-    return get_csp(nonce)
+    return get_csp()

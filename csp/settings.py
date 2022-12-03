@@ -2,7 +2,6 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
-from django.urls import reverse
 
 # If False then the middleware is disabled completely
 CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
@@ -25,7 +24,7 @@ def _apply_csp_header(request: HttpRequest, response: HttpResponse) -> bool:
     return "text/html" in response.headers.get("content-type", "")
 
 
-# True if the request should have the header defaults to HTML pages only.
+# True if the request should have the header; defaults to HTML pages only.
 apply_csp_header = getattr(settings, "CSP_APPLY_HEADER_FUNC", _apply_csp_header)
 
 
@@ -37,9 +36,9 @@ def get_response_header() -> str:
     }[CSP_REPORT_ONLY]
 
 
-# default report-uri is this app, but can be overridden
-def get_report_uri() -> str:
-    return getattr(settings, "CSP_REPORT_URI", reverse("csp:report_uri"))
+# # default report-uri is this app, but can be overridden
+# def get_report_uri() -> str:
+#     return getattr(settings, "CSP_REPORT_URI", reverse("csp:report_uri"))
 
 
 # Default rules from https://content-security-policy.com/
@@ -58,4 +57,5 @@ def get_default_rules() -> dict[str, list[str]]:
         "img-src": ["'self'"],
         "script-src": ["'self'"],
         "style-src": ["'self'"],
+        "report-uri": ["{report_uri}"],
     }

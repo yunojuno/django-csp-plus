@@ -14,5 +14,5 @@ urlpatterns = [
         "test/",
         TemplateView.as_view(template_name="violation.html"),
     ),
-    path("csp/", include("csp.urls")),
+    path("csp/", include("csp.urls", namespace="csp")),
 ]

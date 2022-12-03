@@ -3,26 +3,21 @@ from unittest import mock
 import pytest
 from django.core.cache import cache
 
-from csp.policy import CACHE_KEY, format_csp_header, get_csp
+from csp.policy import CACHE_KEY, format_as_csp, get_csp
 
 
 @pytest.mark.parametrize(
-    "directive,value,nonce,report_uri,output",
+    "directive,value,output",
     [
         # empty directive is omitted
-        ("script-src", [], None, "", ""),
+        ("script-src", [], ""),
         # empty report-uri is omitted
-        ("script-src", ["'self'"], None, "", "script-src 'self'"),
-        # report-uri is appended
-        ("script-src", ["'self'"], None, "/uri", "script-src 'self'; report-uri /uri"),
-        # nonce is injected
-        ("script-src", ["nonce"], "123", "", "script-src nonce-123"),
+        ("script-src", ["'self'"], "script-src 'self'"),
     ],
 )
-def test_format_csp_header(directive, value, nonce, report_uri, output):
+def test_format_as_csp(directive, value, output):
     csp = {directive: value}
-    with mock.patch("csp.policy.get_report_uri", lambda: report_uri):
-        assert format_csp_header(csp, nonce) == output
+    assert format_as_csp(csp) == output
 
 
 @pytest.mark.django_db

@@ -1,8 +1,7 @@
 Default rules (from settings):
 
 {% for directive, values in default_rules.items %}
-{{ directive }}: {{ values|safe }}
-{% endfor %}
+  {{ directive }}: {{ values|safe }}{% endfor %}
 
 ---
 Extra rules (from database):
@@ -10,6 +9,6 @@ Extra rules (from database):
 {{ extra_rules|safe }}
 
 ---
-CSP:
+Combined CSP:
 
 {{ csp|safe }}

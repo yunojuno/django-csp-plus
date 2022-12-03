@@ -89,13 +89,14 @@ CSP_DEFAULTS = {
     "media-src": ["'self'"],
     "object-src": ["'self'"],
     "prefetch-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'", "'nonce-{csp_nonce}'"],
+    "script-src": ["'self'", "'unsafe-inline'", "{nonce}"],
     "script-src-elem": ["'self'", "'unsafe-inline'"],
     "script-src-attr": ["'self'", "'unsafe-inline'"],
     "style-src": ["'self'", "'unsafe-inline'"],
     "style-src-attr": ["'self'", "'unsafe-inline'"],
     "style-src-elem": ["'self'", "'unsafe-inline'"],
     "worker-src": ["'self'"],
+    "report-uri": ["{report_uri}"],
 }
 CSP_ENABLED = True
 CSP_REPORT_ONLY = False
