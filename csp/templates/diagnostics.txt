@@ -6,7 +6,8 @@ Default rules (from settings):
 ---
 Extra rules (from database):
 
-{{ extra_rules|safe }}
+{% for directive, value in extra_rules %}
+  {{ directive }}: {{ value|safe }}{% endfor %}
 
 ---
 Combined CSP:

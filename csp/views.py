@@ -41,7 +41,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:
 def diagnostics(request: HttpRequest) -> HttpResponse:
     default_rules = get_default_rules()
     extra_rules = list(CspRule.objects.enabled().directive_values())
-    csp = get_csp()
+    csp = get_csp(request)
     return render(
         request,
         "diagnostics.txt",

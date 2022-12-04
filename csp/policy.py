@@ -4,6 +4,8 @@ import logging
 from collections import defaultdict
 
 from django.core.cache import cache
+from django.http import HttpRequest
+from django.urls import reverse
 
 from .models import CspRule, DirectiveChoices
 from .settings import CSP_CACHE_TIMEOUT, get_default_rules
@@ -80,11 +82,19 @@ def format_as_csp(policy: PolicyType) -> str:
     return "; ".join(directives).strip()
 
 
-def get_csp() -> str:
+def _context(request: HttpRequest) -> dict[str, str]:
+    """Return report_uri and nonce."""
+    context = {"report_uri": reverse("csp:report_uri")}
+    if nonce := getattr(request, "csp_nonce", ""):
+        context["nonce"] = f"'nonce-{nonce}'"
+    return context
+
+
+def get_csp(request: HttpRequest) -> str:
     """Fetch the CSP from the cache, or rebuild if it's missing."""
     if csp := cache.get(CACHE_KEY):
         logger.debug("Found cached CSP")
-        return csp
+        return csp.format(**_context(request))
     logger.debug("No cached CSP - rebuilding policy")
     refresh_cache()
-    return get_csp()
+    return get_csp(request)

@@ -6,11 +6,15 @@ from typing import Callable
 
 from django.core.exceptions import MiddlewareNotUsed
 from django.http import HttpRequest, HttpResponse
-from django.urls import reverse
 from django.utils.functional import SimpleLazyObject
 
 from .policy import get_csp
-from .settings import CSP_ENABLED, apply_csp_header, get_response_header
+from .settings import (
+    CSP_ENABLED,
+    CSP_RESPONSE_HEADER,
+    process_request,
+    process_response,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,26 +46,10 @@ class CspHeaderMiddleware:
     def __init__(self, get_response: Callable) -> None:
         if not CSP_ENABLED:
             raise MiddlewareNotUsed("Disabling CSPMiddleware")
-        self.response_header = get_response_header()
-        self.context = {"report_uri": reverse("csp:report_uri")}
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse | None:
         response: HttpResponse = self.get_response(request)
-        if apply_csp_header(request, response):
-            self.extract_nonce(request)
-            self.set_response_header(response)
+        if process_request(request) and process_response(response):
+            response.headers[CSP_RESPONSE_HEADER] = get_csp(request)
         return response
-
-    def extract_nonce(self, request: HttpRequest) -> None:
-        if nonce := getattr(request, "csp_nonce", ""):
-            self.context["nonce"] = f"'nonce-{nonce}'"
-
-    def set_response_header(self, response: HttpResponse) -> None:
-        try:
-            # context contains report-uri and nonce
-            csp = get_csp().format(**self.context)
-        except KeyError:
-            logger.exception("Error setting CSP response header.")
-        else:
-            response.headers[self.response_header] = csp

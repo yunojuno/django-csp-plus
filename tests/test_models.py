@@ -14,6 +14,7 @@ from csp.models import CspRule
         ("self", "'self'"),
         ("strict-dynamic", "'strict-dynamic'"),
         ("unsafe-eval", "'unsafe-eval'"),
+        ("'unsafe-eval'", "'unsafe-eval'"),
         ("unsafe-hashes", "'unsafe-hashes'"),
         ("unsafe-inline", "'unsafe-inline'"),
         ("wasm-unsafe-eval", "'wasm-unsafe-eval'"),

@@ -6,5 +6,5 @@ app_name = "csp"
 
 urlpatterns = [
     path("report-uri/", report_uri, name="report_uri"),
-    path("diagnostics/", diagnostics, name="diagnostics"),
+    path("diagnostics/", diagnostics, name="csp_diagnostics"),
 ]

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import Callable
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
@@ -11,25 +14,36 @@ CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 
 
+# Name of the header value to use based on CSP_REPORT_ONLY
+CSP_RESPONSE_HEADER = {
+    True: "Content-Security-Policy-Report-Only",
+    False: "Content-Security-Policy",
+}[CSP_REPORT_ONLY]
+
+
 # cache timeout in seconds - defaults to one hour
 CSP_CACHE_TIMEOUT = int(getattr(settings, "CSP_CACHE_TIMEOUT", 3600))
 
 
-# default func to apply CSP to HTML docs only.
-def _apply_csp_header(request: HttpRequest, response: HttpResponse) -> bool:
+# default process_request func
+def _process_request(request: HttpRequest) -> bool:
+    return True
+
+
+# default process_response funct
+def _process_response(response: HttpResponse) -> bool:
     return "text/html" in response.headers.get("content-type", "")
 
 
 # True if the request should have the header; defaults to HTML pages only.
-apply_csp_header = getattr(settings, "CSP_APPLY_HEADER_FUNC", _apply_csp_header)
+process_request: Callable[[HttpRequest], bool] = getattr(
+    settings, "CSP_FILTER_REQUEST_FUNC", _process_request
+)
 
 
-# Name of the header value to use based on CSP_REPORT_ONLY
-def get_response_header() -> str:
-    return {
-        True: "Content-Security-Policy-Report-Only",
-        False: "Content-Security-Policy",
-    }[CSP_REPORT_ONLY]
+process_response: Callable[[HttpResponse], bool] = getattr(
+    settings, "CSP_FILTER_RESPONSE_FUNC", _process_response
+)
 
 
 # Default rules from https://content-security-policy.com/
