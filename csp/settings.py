@@ -15,10 +15,6 @@ CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 CSP_CACHE_TIMEOUT = int(getattr(settings, "CSP_CACHE_TIMEOUT", 3600))
 
 
-# directives to which "nonce-rAnd0m" will be appended
-CSP_ADD_NONCE_DIRECTIVES: list[str] = getattr(settings, "CSP_ADD_NONCE_DIRECTIVES", [])
-
-
 # default func to apply CSP to HTML docs only.
 def _apply_csp_header(request: HttpRequest, response: HttpResponse) -> bool:
     return "text/html" in response.headers.get("content-type", "")
@@ -34,11 +30,6 @@ def get_response_header() -> str:
         True: "Content-Security-Policy-Report-Only",
         False: "Content-Security-Policy",
     }[CSP_REPORT_ONLY]
-
-
-# # default report-uri is this app, but can be overridden
-# def get_report_uri() -> str:
-#     return getattr(settings, "CSP_REPORT_URI", reverse("csp:report_uri"))
 
 
 # Default rules from https://content-security-policy.com/

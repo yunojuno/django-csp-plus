@@ -47,6 +47,7 @@ class DirectiveChoices(models.TextChoices):
     MEDIA_SRC = ("media-src", "media-src")
     OBJECT_SRC = ("object-src", "object-src")
     PREFETCH_SRC = ("prefetch-src", "prefetch-src")
+    REPORT_URI = ("report-uri", "report-uri")
     SCRIPT_SRC = ("script-src", "script-src")
     SCRIPT_SRC_ELEM = ("script-src-elem", "script-src-elem")
     SCRIPT_SRC_ATTR = ("script-src-attr", "script-src-attr")
