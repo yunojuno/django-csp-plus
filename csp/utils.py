@@ -1,0 +1,20 @@
+# <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+from urllib.parse import urlparse, urlunparse
+
+
+def strip_fragment(url: str) -> str:
+    """Strip the fragment from a url."""
+    scheme, netloc, path, params, query, _ = urlparse(url)
+    return urlunparse((scheme, netloc, path, params, query, ""))
+
+
+def strip_query(url: str) -> str:
+    """Strip the query, fragment from a url."""
+    scheme, netloc, path, params, _, _ = urlparse(url)
+    return urlunparse((scheme, netloc, path, params, "", ""))
+
+
+def strip_path(url: str) -> str:
+    """Strip the path, query, fragment from a url."""
+    scheme, netloc, path, _, _, _ = urlparse(url)
+    return urlunparse((scheme, netloc, "", "", "", ""))

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from urllib.parse import urlparse, urlunparse
 
 from django.db import models
 from django.db.models import F
 from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field
+
+from .utils import strip_query
 
 logger = logging.getLogger(__name__)
 
@@ -107,15 +108,6 @@ class CspRule(models.Model):
         return f"{self.directive} {self.value}"
 
     @classmethod
-    def clean_url(cls, value: str) -> str:
-        # we got here, let's see if we have a URL, and if we do,
-        # strip off the querystring, params, as they are ignored.
-        scheme, netloc, path, _, _, _ = urlparse(value)
-        if any([scheme, netloc, path]):
-            return urlunparse((scheme, netloc, path, "", "", ""))
-        return ""
-
-    @classmethod
     def clean_value(cls, value: str) -> str:
         value = value.lower()
         if value in cls.REQUIRE_SINGLE_QUOTE:
@@ -124,7 +116,7 @@ class CspRule(models.Model):
             return f"{value}:"
         if value in cls.REQUIRE_UNSAFE_PREFIX:
             return f"'unsafe-{value}'"
-        if source := cls.clean_url(value):
+        if source := strip_query(value):
             return source
         # not sure what we have here - let it go through
         return value
@@ -179,6 +171,7 @@ class CspReport(models.Model):
     class Meta:
         verbose_name = "CSP Violation"
         unique_together = ("effective_directive", "blocked_uri")
+        ordering = ["effective_directive", "blocked_uri"]
 
     def __str__(self) -> str:
         return (

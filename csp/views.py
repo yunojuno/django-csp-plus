@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -36,6 +37,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     return HttpResponse()
 
 
+@user_passes_test(lambda user: user.is_staff)
 def diagnostics(request: HttpRequest) -> HttpResponse:
     default_rules = get_default_rules()
     extra_rules = list(CspRule.objects.enabled().directive_values())

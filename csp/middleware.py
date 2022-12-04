@@ -55,10 +55,11 @@ class CspHeaderMiddleware:
 
     def extract_nonce(self, request: HttpRequest) -> None:
         if nonce := getattr(request, "csp_nonce", ""):
-            self.context["nonce"] = nonce
+            self.context["nonce"] = f"'nonce-{nonce}'"
 
     def set_response_header(self, response: HttpResponse) -> None:
         try:
+            # context contains report-uri and nonce
             csp = get_csp().format(**self.context)
         except KeyError:
             logger.exception("Error setting CSP response header.")

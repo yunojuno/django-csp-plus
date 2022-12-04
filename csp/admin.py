@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.utils import IntegrityError
 from django.http import HttpRequest
 
 from .models import (
@@ -8,13 +9,18 @@ from .models import (
     CspRuleQuerySet,
     convert_report,
 )
+from .utils import strip_path
 
 
 @admin.register(CspRule)
 class CspRuleAdmin(admin.ModelAdmin):
 
     list_display = ("directive", "value", "_enabled")
-    actions = ["enable_selected_rules", "disable_selected_rules"]
+    actions = [
+        "enable_selected_rules",
+        "disable_selected_rules",
+        "strip_selected_rules",
+    ]
 
     @admin.display(boolean=True)
     def _enabled(self, obj: CspRule) -> bool:
@@ -41,10 +47,49 @@ class CspRuleAdmin(admin.ModelAdmin):
         self.clear_cache()
         self.message_user(request, f"Disabled {count} rules.")
 
+    @admin.action(description="Strip path from selected CSP rules")
+    def strip_selected_rules(
+        self, request: HttpRequest, queryset: CspReportQuerySet
+    ) -> None:
+        """Strip paths off selected rules."""
+        stripped = 0
+        ignored = 0
+        deleted = 0
+        for rule in queryset:
+            stripped_value = strip_path(rule.value)
+            if stripped_value == rule.value:
+                ignored += 1
+            else:
+                rule.value = stripped_value
+                try:
+                    rule.save(update_fields=["value"])
+                except IntegrityError:
+                    # we have a duplicate rule - because we are
+                    # stripping off the path multiple rules may now
+                    # clash (same origin), and so we delete the
+                    # duplicates.
+                    rule.delete()
+                    deleted += 1
+                else:
+                    stripped += 1
+        if stripped:
+            self.message_user(
+                request, f"Successfully stripped {stripped} rules.", "success"
+            )
+        if ignored:
+            self.message_user(request, f"Ignored {ignored} unchanged rules.", "success")
+        if deleted:
+            self.message_user(request, f"Deleted {deleted} duplicate rules.", "error")
+
 
 @admin.register(CspReport)
 class CspReportAdmin(admin.ModelAdmin):
-    list_display = ("effective_directive", "blocked_uri", "request_count")
+    list_display = (
+        "effective_directive",
+        "blocked_uri",
+        "request_count",
+        "last_updated_at",
+    )
     readonly_fields = (
         "document_uri",
         "effective_directive",
@@ -54,7 +99,7 @@ class CspReportAdmin(admin.ModelAdmin):
         "last_updated_at",
         "request_count",
     )
-    list_filter = ("effective_directive",)
+    list_filter = ("effective_directive", "last_updated_at")
     actions = ("add_rule",)
 
     @admin.action(description="Add new CSP rule for selected violations.")

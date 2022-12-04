@@ -82,6 +82,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 "verbose_name": "CSP Violation",
+                "ordering": ["effective_directive", "blocked_uri"],
                 "unique_together": {("effective_directive", "blocked_uri")},
             },
         ),

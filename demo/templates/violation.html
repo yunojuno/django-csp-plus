@@ -1,8 +1,24 @@
 <html>
-    <head></head>
+    <head>
+        <title>Django CSP Plus</title>
+    </head>
     <body>
-        <img src="https://yunojuno-prod-assets.s3.amazonaws.com/images/static_pages/maintenance.gif" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Karla:400,700" crossorigin="anonymous">
+        <h1>CSP violation test page</h1>
+        <p>
+            This page contains a variety of 'img', 'script' and 'link' tags to illustrate how the
+            CSP works.
+        </p>
+        <img
+            src="https://yunojuno-prod-assets.s3.amazonaws.com/images/static_pages/maintenance.gif"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Karla:400,700"
+            crossorigin="anonymous"
+        />
         <script src="https://maps.googleapis.com/maps/api/js?key=1&amp;libraries=places&amp;language=en&amp;region=GB"></script>
+        <script>
+            console.log("This is an inline script");
+        </script>
     </body>
 </html>
