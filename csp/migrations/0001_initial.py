@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
                             ("media-src", "media-src"),
                             ("object-src", "object-src"),
                             ("prefetch-src", "prefetch-src"),
+                            ("report-uri", "report-uri"),
                             ("script-src", "script-src"),
                             ("script-src-elem", "script-src-elem"),
                             ("script-src-attr", "script-src-attr"),
