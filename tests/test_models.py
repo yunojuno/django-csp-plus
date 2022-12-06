@@ -1,6 +1,7 @@
 import pytest
+from pydantic import ValidationError
 
-from csp.models import CspRule
+from csp.models import CspRule, ReportData
 
 
 @pytest.mark.parametrize(
@@ -35,3 +36,27 @@ from csp.models import CspRule
 )
 def test_clean_value(input, output) -> None:
     assert CspRule.clean_value(input) == output
+
+
+class TestReportData:
+    def test_defaults(self) -> None:
+        report = ReportData(
+            **{
+                "blocked-uri": "https://yunojuno-prod-assets.s3.amazonaws.com/",
+                "effective-directive": "img-src",
+            }
+        )
+        assert report.blocked_uri == "https://yunojuno-prod-assets.s3.amazonaws.com/"
+        assert report.effective_directive == "img-src"
+
+    @pytest.mark.parametrize(
+        "report_data",
+        [
+            {},
+            {"blocked_uri": "/"},
+            {"effective_directive": "script-src"},
+        ],
+    )
+    def test_mandatory_fields(self, report_data: dict) -> None:
+        with pytest.raises(ValidationError):
+            _ = ReportData(**report_data)

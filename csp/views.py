@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from pydantic import ValidationError
 
 from .models import CspReport, CspRule, ReportData
 from .policy import get_csp, get_default_rules
@@ -31,8 +32,15 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     # }
     data = json.loads(request.body.decode())
     csp_report = data["csp-report"]
-    vr = ReportData(**csp_report)
-    CspReport.objects.save_report(vr)
+    try:
+        vr = ReportData(**csp_report)
+    except ValidationError:
+        # if the report doesn't parse, ignore it
+        logger.debug("Error validating CSP violation report")
+        logger.debug("Request.META: %s", request.META)
+        pass
+    else:
+        CspReport.objects.save_report(vr)
     logger.debug(json.dumps(data, indent=2, sort_keys=True))
     return HttpResponse()
 

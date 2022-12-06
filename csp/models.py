@@ -15,15 +15,22 @@ logger = logging.getLogger(__name__)
 
 class ReportData(BaseModel):
 
+    # browser support for CSP reports turns out to be patchy at best -
+    # all fields are optional on the way in, but we need at least the
+    # violated_directive and the blocked_uri to be able to make sense of
+    # the report.
+
+    # mandatory fields - without these we cannot process the report
     blocked_uri: str = Field(alias="blocked-uri")
-    disposition: str = Field(alias="disposition")
-    document_uri: str = Field(alias="document-uri")
     effective_directive: str = Field(alias="effective-directive")
-    original_policy: str = Field(alias="original-policy")
-    referrer: str = Field(alias="referrer")
-    script_sample: str = Field(alias="script-sample")
-    status_code: str = Field(alias="status-code")
-    violated_directive: str = Field(alias="violated-directive")
+    # optional fields - we don't use these currently
+    disposition: str | None = Field("", alias="disposition")
+    document_uri: str | None = Field("", alias="document-uri")
+    original_policy: str | None = Field(alias="original-policy")
+    referrer: str | None = Field(alias="referrer")
+    script_sample: str | None = Field(alias="script-sample")
+    status_code: str | None = Field(0, alias="status-code")
+    violated_directive: str | None = Field(alias="violated-directive")
 
     class Config:
         allow_population_by_field_name = True
@@ -134,7 +141,7 @@ class CspReportManager(models.Manager):
             blocked_uri=data.blocked_uri[:200],
         )
         # we udpate with the latest page that has caused the violation
-        report.document_ur = data.document_uri[:200]
+        report.document_uri = (data.document_uri or "")[:200]
         report.disposition = data.disposition
         report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
