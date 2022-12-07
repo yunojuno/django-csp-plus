@@ -45,23 +45,26 @@ class DispositionChoices(models.TextChoices):
 
 class DirectiveChoices(models.TextChoices):
 
-    DEFAULT_SRC = ("default-src", "default-src")
+    BASE_URI = ("base-uri", "base-uri")
     CHILD_SRC = ("child-src", "child-src")
     CONNECT_SRC = ("connect-src", "connect-src")
+    DEFAULT_SRC = ("default-src", "default-src")
     FONT_SRC = ("font-src", "font-src")
+    FORM_ACTION = ("form-action", "form-action")
+    FRAME_ANCESTORS = ("frame-ancestors", "frame-ancestors")
     FRAME_SRC = ("frame-src", "frame-src")
     IMG_SRC = ("img-src", "img-src")
     MANIFEST_SRC = ("manifest-src", "manifest-src")
     MEDIA_SRC = ("media-src", "media-src")
     OBJECT_SRC = ("object-src", "object-src")
-    PREFETCH_SRC = ("prefetch-src", "prefetch-src")
+    REPORT_TO = ("report-to", "report-to")
     REPORT_URI = ("report-uri", "report-uri")
     SCRIPT_SRC = ("script-src", "script-src")
-    SCRIPT_SRC_ELEM = ("script-src-elem", "script-src-elem")
     SCRIPT_SRC_ATTR = ("script-src-attr", "script-src-attr")
+    SCRIPT_SRC_ELEM = ("script-src-elem", "script-src-elem")
     STYLE_SRC = ("style-src", "style-src")
-    STYLE_SRC_ELEM = ("style-src-elem", "style-src-elem")
     STYLE_SRC_ATTR = ("style-src-attr", "style-src-attr")
+    STYLE_SRC_ELEM = ("style-src-elem", "style-src-elem")
     WORKER_SRC = ("worker-src", "worker-src")
 
 
