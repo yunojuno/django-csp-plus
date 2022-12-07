@@ -2,9 +2,11 @@ import json
 import logging
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpRequest, HttpResponse
+from django.db.utils import IntegrityError
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from pydantic import ValidationError
 
 from .models import CspReport, CspRule, ReportData
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
+@require_http_methods(["POST"])
 def report_uri(request: HttpRequest) -> HttpResponse:
     # {
     #     'csp-report': {
@@ -30,22 +33,28 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     #         'script-sample': ''
     #     }
     # }
-    data = json.loads(request.body.decode())
-    csp_report = data["csp-report"]
     try:
+        data = json.loads(request.body.decode())
+        logger.debug(json.dumps(data, indent=2, sort_keys=True))
+        csp_report = data["csp-report"]
         vr = ReportData(**csp_report)
+        CspReport.objects.save_report(vr)
+    except json.decoder.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid request - must contain valid JSON.")
+    except KeyError:
+        return HttpResponseBadRequest("Invalid request - must contain 'csp-report'")
     except ValidationError:
         # if the report doesn't parse, ignore it
         logger.debug("Error validating CSP violation report")
-        logger.debug("Request.META: %s", request.META)
-        pass
-    else:
-        CspReport.objects.save_report(vr)
-    logger.debug(json.dumps(data, indent=2, sort_keys=True))
-    return HttpResponse()
+        return HttpResponseBadRequest("Invalid request - report data invalid.")
+    except (IntegrityError, CspReport.DoesNotExist, CspReport.MultipleObjectsReturned):
+        logger.exception("Error saving CspReport")
+        return HttpResponse()
+    return HttpResponse(status=201)
 
 
 @user_passes_test(lambda user: user.is_staff)
+@require_http_methods(["GET"])
 def diagnostics(request: HttpRequest) -> HttpResponse:
     default_rules = get_default_rules()
     extra_rules = list(CspRule.objects.enabled().directive_values())

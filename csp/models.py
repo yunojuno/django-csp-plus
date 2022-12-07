@@ -20,9 +20,10 @@ class ReportData(BaseModel):
     # violated_directive and the blocked_uri to be able to make sense of
     # the report.
 
-    # mandatory fields - without these we cannot process the report
-    blocked_uri: str = Field(alias="blocked-uri")
-    effective_directive: str = Field(alias="effective-directive")
+    # mandatory fields - without these we cannot process the report the
+    # min_length ensures we don't have an empty string
+    blocked_uri: str = Field(alias="blocked-uri", min_length=1)
+    effective_directive: str = Field(alias="effective-directive", min_length=1)
     # optional fields - we don't use these currently
     disposition: str | None = Field("", alias="disposition")
     document_uri: str | None = Field("", alias="document-uri")

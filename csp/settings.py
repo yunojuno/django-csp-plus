@@ -14,6 +14,11 @@ CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 
 
+# Value 0..1 - used to tune the percentage of responses that get the
+# report-uri valuable if the reporting is too noisy
+CSP_REPORT_SAMPLING = float(getattr(settings, "CSP_REPORT_SAMPLING", 1.0))
+
+
 # Name of the header value to use based on CSP_REPORT_ONLY
 CSP_RESPONSE_HEADER = {
     True: "Content-Security-Policy-Report-Only",

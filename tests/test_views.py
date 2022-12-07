@@ -1,6 +1,10 @@
+from unittest import mock
+
 import pytest
+from django.db.utils import IntegrityError
 from django.test import RequestFactory
 
+from csp.models import CspReport, CspReportManager
 from csp.views import report_uri
 
 
@@ -26,7 +30,7 @@ def test_report_ui(rf: RequestFactory) -> None:
         content_type="application/json",
     )
     response = report_uri(request)
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 @pytest.mark.django_db
@@ -42,7 +46,7 @@ def test_report_ui_minimal(rf: RequestFactory) -> None:
         content_type="application/json",
     )
     response = report_uri(request)
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 @pytest.mark.django_db
@@ -58,4 +62,25 @@ def test_report_ui_invalid(rf: RequestFactory) -> None:
         content_type="application/json",
     )
     response = report_uri(request)
-    assert response.status_code == 200
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "error", [IntegrityError, CspReport.DoesNotExist, CspReport.MultipleObjectsReturned]
+)
+def test_report_ui_error_on_save(rf: RequestFactory, error: type[Exception]) -> None:
+    request = rf.post(
+        "/",
+        data={
+            "csp-report": {
+                "effective-directive": "",
+                "blocked-uri": "",
+            }
+        },
+        content_type="application/json",
+    )
+    with mock.patch.object(CspReportManager, "save_report") as mock_save:
+        mock_save.side_effect = error
+        response = report_uri(request)
+    assert response.status_code == 400

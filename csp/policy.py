@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from collections import defaultdict
 
 from django.core.cache import cache
@@ -8,7 +9,7 @@ from django.http import HttpRequest
 from django.urls import reverse
 
 from .models import CspRule, DirectiveChoices
-from .settings import CSP_CACHE_TIMEOUT, get_default_rules
+from .settings import CSP_CACHE_TIMEOUT, CSP_REPORT_SAMPLING, get_default_rules
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,11 @@ def _context(request: HttpRequest) -> dict[str, str]:
     context = {"report_uri": reverse("csp:report_uri")}
     if nonce := getattr(request, "csp_nonce", ""):
         context["nonce"] = f"'nonce-{nonce}'"
+    # CSP_REPORT_SAMPLING is a float 0..1 - if we're above the value,
+    # then strip out the report-uri so that we don't send reports.
+    if random.random() > CSP_REPORT_SAMPLING:  # noqa: S311
+        logger.debug("Removing report_uri from CSP (sampling)")
+        context["report_uri"] = ""
     return context
 
 
