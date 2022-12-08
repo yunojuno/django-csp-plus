@@ -16,6 +16,7 @@ from .utils import strip_path
 class CspRuleAdmin(admin.ModelAdmin):
 
     list_display = ("directive", "value", "_enabled")
+    list_filter = ("directive", "enabled")
     actions = [
         "enable_selected_rules",
         "disable_selected_rules",
