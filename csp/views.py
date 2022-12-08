@@ -33,20 +33,26 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     #         'script-sample': ''
     #     }
     # }
+    request_body = request.body.decode()
+
+    def _bad_request(msg: str) -> HttpResponseBadRequest:
+        logger.debug(msg)
+        logger.debug(request_body)
+        return HttpResponseBadRequest(msg)
+
     try:
-        data = json.loads(request.body.decode())
-        logger.debug(json.dumps(data, indent=2, sort_keys=True))
+        data = json.loads(request_body)
         csp_report = data["csp-report"]
         vr = ReportData(**csp_report)
         CspReport.objects.save_report(vr)
     except json.decoder.JSONDecodeError:
-        return HttpResponseBadRequest("Invalid request - must contain valid JSON.")
+        return _bad_request("Invalid CSP report - must contain valid JSON.")
     except KeyError:
-        return HttpResponseBadRequest("Invalid request - must contain 'csp-report'")
+        logger.exception("key error")
+        return _bad_request("Invalid CSP report - must contain 'csp-report'")
     except ValidationError:
         # if the report doesn't parse, ignore it
-        logger.debug("Error validating CSP violation report")
-        return HttpResponseBadRequest("Invalid request - report data invalid.")
+        return _bad_request("Invalid CSP report - report data is invalid.")
     except (IntegrityError, CspReport.DoesNotExist, CspReport.MultipleObjectsReturned):
         logger.exception("Error saving CspReport")
         return HttpResponse()

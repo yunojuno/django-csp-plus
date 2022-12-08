@@ -55,7 +55,6 @@ def test_report_ui_invalid(rf: RequestFactory) -> None:
         "/",
         data={
             "csp-report": {
-                # "effective-directive": "img-src",
                 "blocked-uri": "https://yunojuno-prod-assets.s3.amazonaws.com/",
             }
         },
@@ -63,6 +62,22 @@ def test_report_ui_invalid(rf: RequestFactory) -> None:
     )
     response = report_uri(request)
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_report_ui_deprecated_attr(rf: RequestFactory) -> None:
+    request = rf.post(
+        "/",
+        data={
+            "csp-report": {
+                "violated-directive": "img-src",
+                "blocked-uri": "https://yunojuno-prod-assets.s3.amazonaws.com/",
+            }
+        },
+        content_type="application/json",
+    )
+    response = report_uri(request)
+    assert response.status_code == 201
 
 
 @pytest.mark.django_db

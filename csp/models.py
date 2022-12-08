@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import F
 from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
 
 from .utils import strip_query
 
@@ -23,15 +23,32 @@ class ReportData(BaseModel):
     # mandatory fields - without these we cannot process the report the
     # min_length ensures we don't have an empty string
     blocked_uri: str = Field(alias="blocked-uri", min_length=1)
-    effective_directive: str = Field(alias="effective-directive", min_length=1)
-    # optional fields - we don't use these currently
+    # we must have one of these - validate_directives enforces this
+    effective_directive: str | None = Field(alias="effective-directive", min_length=1)
+    violated_directive: str | None = Field(alias="violated-directive", min_length=1)
+    # optional
     disposition: str | None = Field("", alias="disposition")
     document_uri: str | None = Field("", alias="document-uri")
     original_policy: str | None = Field(alias="original-policy")
     referrer: str | None = Field(alias="referrer")
     script_sample: str | None = Field(alias="script-sample")
     status_code: str | None = Field(0, alias="status-code")
-    violated_directive: str | None = Field(alias="violated-directive")
+
+    @root_validator
+    def validate_directives(
+        cls, values: dict[str, str | None]
+    ) -> dict[str, str | None]:
+        if not values["effective_directive"]:
+            if not (violated_directive := values["violated_directive"]):
+                raise ValueError(
+                    "Either 'effective_directive' or "
+                    "'violated_directive' must be present."
+                )
+            logger.debug(
+                "'effective_directive' missing - using 'violated_directive' attr."
+            )
+            values["effective_directive"] = violated_directive
+        return values
 
     class Config:
         allow_population_by_field_name = True
@@ -140,6 +157,7 @@ class CspReportQuerySet(models.QuerySet):
 
 class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport:
+        # some clients send the deprecated "violated-directive" field.
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
             blocked_uri=data.blocked_uri[:200],
