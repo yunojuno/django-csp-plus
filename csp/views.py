@@ -48,7 +48,6 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     except json.decoder.JSONDecodeError:
         return _bad_request("Invalid CSP report - must contain valid JSON.")
     except KeyError:
-        logger.exception("key error")
         return _bad_request("Invalid CSP report - must contain 'csp-report'")
     except ValidationError:
         # if the report doesn't parse, ignore it

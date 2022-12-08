@@ -24,8 +24,8 @@ class ReportData(BaseModel):
     # min_length ensures we don't have an empty string
     blocked_uri: str = Field(alias="blocked-uri", min_length=1)
     # we must have one of these - validate_directives enforces this
-    effective_directive: str | None = Field(alias="effective-directive", min_length=1)
-    violated_directive: str | None = Field(alias="violated-directive", min_length=1)
+    effective_directive: str | None = Field(alias="effective-directive")
+    violated_directive: str | None = Field(alias="violated-directive")
     # optional
     disposition: str | None = Field("", alias="disposition")
     document_uri: str | None = Field("", alias="document-uri")
@@ -38,8 +38,9 @@ class ReportData(BaseModel):
     def validate_directives(
         cls, values: dict[str, str | None]
     ) -> dict[str, str | None]:
-        if not values["effective_directive"]:
-            if not (violated_directive := values["violated_directive"]):
+        """Ensure that we have either effective_directive or violated_directive."""
+        if not values.get("effective_directive", ""):
+            if not (violated_directive := values.get("violated_directive", "")):
                 raise ValueError(
                     "Either 'effective_directive' or "
                     "'violated_directive' must be present."
@@ -157,7 +158,6 @@ class CspReportQuerySet(models.QuerySet):
 
 class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport:
-        # some clients send the deprecated "violated-directive" field.
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
             blocked_uri=data.blocked_uri[:200],
