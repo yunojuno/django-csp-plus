@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def report_uri(request: HttpRequest) -> HttpResponse:
+def report_uri(request: HttpRequest) -> HttpResponse:  # noqa: C901
     # {
     #     'csp-report': {
     #         'document-uri': 'http://127.0.0.1:8000/test/',
@@ -34,11 +34,29 @@ def report_uri(request: HttpRequest) -> HttpResponse:
     #     }
     # }
     request_body = request.body.decode()
+    user_agent = request.headers.get("User-Agent", "missing User-Agent")
 
     def _bad_request(msg: str) -> HttpResponseBadRequest:
         logger.debug(msg)
-        logger.debug(request_body)
+        logger.debug("CSP reporting User-Agent: %s", user_agent)
+        logger.debug("CSP report payload:\n%s", request_body)
         return HttpResponseBadRequest(msg)
+
+    def _validation_error(ex: ValidationError) -> str:
+        """
+        Parse Pydantic error into output message.
+
+        This message goes back to the requestor, so we don't want the
+        full Pydantic error - just the list of invalid fields.
+
+        See https://docs.pydantic.dev/usage/models/#error-handling
+
+        """
+        try:
+            return ", ".join([e["loc"][0] for e in ex.errors()])
+        except (IndexError, KeyError):
+            logger.exception("Unparseable Pydantic error: %s", ex.json())
+            return "unknown error"
 
     try:
         data = json.loads(request_body)
@@ -49,13 +67,14 @@ def report_uri(request: HttpRequest) -> HttpResponse:
         return _bad_request("Invalid CSP report - must contain valid JSON.")
     except KeyError:
         return _bad_request("Invalid CSP report - must contain 'csp-report'")
-    except ValidationError:
-        # if the report doesn't parse, ignore it
-        return _bad_request("Invalid CSP report - report data is invalid.")
+    except ValidationError as ex:
+        return _bad_request(
+            f"Invalid CSP report - report data is invalid: {_validation_error(ex)}"
+        )
     except (IntegrityError, CspReport.DoesNotExist, CspReport.MultipleObjectsReturned):
         logger.exception("Error saving CspReport")
         return HttpResponse()
-    return HttpResponse(status=201)
+    return HttpResponse(status=201, content_type="application/json")
 
 
 @user_passes_test(lambda user: user.is_staff)
