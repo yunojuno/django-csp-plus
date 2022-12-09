@@ -4,6 +4,7 @@ from django.http import HttpRequest
 
 from .models import (
     CspReport,
+    CspReportBlacklist,
     CspReportQuerySet,
     CspRule,
     CspRuleQuerySet,
@@ -116,3 +117,12 @@ class CspReportAdmin(admin.ModelAdmin):
             self.message_user(request, f"Created {len(created)} new rules.", "success")
         if duplicates:
             self.message_user(request, f"Ignored {duplicates} duplicates.", "warning")
+
+
+@admin.register(CspReportBlacklist)
+class CspReportBlacklistAdmin(admin.ModelAdmin):
+    list_display = (
+        "directive",
+        "prefix",
+    )
+    list_filter = ("directive",)

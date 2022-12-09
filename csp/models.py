@@ -8,7 +8,7 @@ from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field, root_validator
 
-from .utils import strip_query
+from .utils import strip_path, strip_query
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,11 @@ class ReportData(BaseModel):
     referrer: str | None = Field(alias="referrer")
     script_sample: str | None = Field(alias="script-sample")
     status_code: str | None = Field(0, alias="status-code")
+
+    @property
+    def blocked_domain(self) -> str:
+        """Strip the path, query from the blocked_uri."""
+        return strip_path(self.blocked_uri)
 
     @root_validator
     def validate_directives(
@@ -157,7 +162,10 @@ class CspReportQuerySet(models.QuerySet):
 
 
 class CspReportManager(models.Manager):
-    def save_report(self, data: ReportData) -> CspReport:
+    def save_report(self, data: ReportData) -> CspReport | None:
+        if CspReportBlacklist.objects.in_blacklist(data):
+            logger.debug("Report domain is blacklisted: %s", data.blocked_domain)
+            return None
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
             blocked_uri=data.blocked_uri[:200],
@@ -230,3 +238,39 @@ def convert_report(report: CspReport, enable: bool = True) -> CspRule | None:
         logger.debug("Rule created, deleting violation report.")
         report.delete()
         return rule
+
+
+class CspReportBlacklistManager(models.Manager):
+    def in_blacklist(self, report: ReportData) -> bool:
+        return (
+            self.get_queryset()
+            .filter(
+                directive=report.effective_directive,
+                prefix__iexact=report.blocked_domain,
+            )
+            .exists()
+        )
+
+
+class CspReportBlacklist(models.Model):
+    """
+    Combination of directive + domain to ignore.
+
+    CSP reports are flakey, to say the least, and some directive/domain
+    combos get stuck. This model creates a blacklist that is used to
+    stop logging reports once you are sure you have the rules set up.
+
+    """
+
+    directive = models.CharField(max_length=50, choices=DirectiveChoices.choices)
+    prefix = models.CharField(max_length=255)
+
+    objects = CspReportBlacklistManager()
+
+    class Meta:
+        verbose_name = "CSP Report Blacklist"
+        unique_together = ("directive", "prefix")
+        ordering = ["directive", "prefix"]
+
+    def __str__(self) -> str:
+        return f"{self.directive} {self.prefix}"
