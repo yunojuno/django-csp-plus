@@ -99,3 +99,18 @@ def test_report_ui_error_on_save(rf: RequestFactory, error: type[Exception]) -> 
         mock_save.side_effect = error
         response = report_uri(request)
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "error", [IntegrityError, CspReport.DoesNotExist, CspReport.MultipleObjectsReturned]
+)
+def test_report_ui_throttled(rf: RequestFactory, error: type[Exception]) -> None:
+    request = rf.post("/", content_type="application/json")
+    response = report_uri(request)
+    assert response.status_code == 400
+    # with throttling turned up to 100% we get no errors (as request is
+    # ignored).
+    with mock.patch("csp.views.CSP_REPORT_THROTTLING", 1.0):
+        response = report_uri(request)
+        assert response.status_code == 200

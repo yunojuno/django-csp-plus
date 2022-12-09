@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 
 from django.contrib.auth.decorators import user_passes_test
 from django.db.utils import IntegrityError
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 
 from .models import CspReport, CspRule, ReportData
 from .policy import get_csp, get_default_rules
+from .settings import CSP_REPORT_THROTTLING
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,12 @@ def report_uri(request: HttpRequest) -> HttpResponse:  # noqa: C901
     #         'script-sample': ''
     #     }
     # }
+    # CSP_REPORT_THROTTLING is a float 0..1 - if we're below the value,
+    # then respond immediately without attempting to process the
+    # payload.
+    if random.random() < CSP_REPORT_THROTTLING:  # noqa: S311
+        return HttpResponse()
+
     request_body = request.body.decode()
     user_agent = request.headers.get("User-Agent", "missing User-Agent")
 
