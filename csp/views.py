@@ -53,7 +53,7 @@ def report_uri(request: HttpRequest) -> HttpResponse:  # noqa: C901
 
         """
         try:
-            return ", ".join([e["loc"][0] for e in ex.errors()])
+            return ", ".join([str(e["loc"][0]) for e in ex.errors()])
         except (IndexError, KeyError):
             logger.exception("Unparseable Pydantic error: %s", ex.json())
             return "unknown error"
