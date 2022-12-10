@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
+from typing import TypeAlias
 
 from django.db import models
 from django.db.models import F
 from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, root_validator, validator
 
-from .utils import strip_path, strip_query
+from .utils import strip_query
 
 logger = logging.getLogger(__name__)
+
+PydanticValues: TypeAlias = dict[str, str | None]
 
 
 class ReportData(BaseModel):
@@ -34,27 +38,33 @@ class ReportData(BaseModel):
     script_sample: str | None = Field(alias="script-sample")
     status_code: str | None = Field(0, alias="status-code")
 
-    @property
-    def blocked_domain(self) -> str:
-        """Strip the path, query from the blocked_uri."""
-        return strip_path(self.blocked_uri)
+    @validator("document_uri", "blocked_uri")
+    def strip_uri(cls, uri: str) -> str:
+        """
+        Strip querystring and truncate to fit model length.
+
+        We don't care about querystring params (CSP doesn't), and we can't
+        store URLs > 200 chars long, so we truncate here.
+
+        """
+        return strip_query(uri)[:200] if uri else ""
 
     @root_validator
-    def validate_directives(
-        cls, values: dict[str, str | None]
-    ) -> dict[str, str | None]:
+    def validate_directives(cls, values: PydanticValues) -> PydanticValues:
         """Ensure that we have either effective_directive or violated_directive."""
-        if not values.get("effective_directive", ""):
-            if not (violated_directive := values.get("violated_directive", "")):
-                raise ValueError(
-                    "Either 'effective_directive' or "
-                    "'violated_directive' must be present."
-                )
+        if values.get("effective_directive", ""):
+            return values
+        # if effective_directive is empty, but violated_directive is not,
+        # then udpate the former with the latter.
+        if violated_directive := values.get("violated_directive", ""):
             logger.debug(
                 "'effective_directive' missing - using 'violated_directive' attr."
             )
             values["effective_directive"] = violated_directive
-        return values
+            return values
+        raise ValueError(
+            "Either 'effective_directive' or 'violated_directive' must be present."
+        )
 
     class Config:
         allow_population_by_field_name = True
@@ -163,15 +173,12 @@ class CspReportQuerySet(models.QuerySet):
 
 class CspReportManager(models.Manager):
     def save_report(self, data: ReportData) -> CspReport | None:
-        if CspReportBlacklist.objects.in_blacklist(data):
-            logger.debug("Report domain is blacklisted: %s", data.blocked_domain)
-            return None
         report, _ = CspReport.objects.get_or_create(
             effective_directive=data.effective_directive,
-            blocked_uri=data.blocked_uri[:200],
+            blocked_uri=data.blocked_uri,
         )
         # we udpate with the latest page that has caused the violation
-        report.document_uri = (data.document_uri or "")[:200]
+        report.document_uri = data.document_uri
         report.disposition = data.disposition
         report.request_count = F("request_count") + 1
         report.last_updated_at = tz_now()
@@ -189,7 +196,7 @@ class CspReport(models.Model):
     #         'effective-directive': 'img-src',
     #         'original-policy': "default-src https:; img-src 'self';",
     #         'disposition': 'enforce',
-    #         'blocked-uri': 'https://yunojuno-prod-assets.s3.amazonaws.com/',
+    #         'blocked-uri': 'https://example.com',
     #         'line-number': 8,
     #         'source-file': 'http://127.0.0.1:8000/test/',
     #         'status-code': 200,
@@ -240,16 +247,12 @@ def convert_report(report: CspReport, enable: bool = True) -> CspRule | None:
         return rule
 
 
-class CspReportBlacklistManager(models.Manager):
-    def in_blacklist(self, report: ReportData) -> bool:
-        return (
-            self.get_queryset()
-            .filter(
-                directive=report.effective_directive,
-                prefix__iexact=report.blocked_domain,
-            )
-            .exists()
-        )
+class CspReportBlacklistQueryset(models.QuerySet):
+    def as_dict(self) -> dict[str, list[str]]:
+        values = defaultdict(list)
+        for directive, blocked_uri in self.values_list("directive", "blocked_uri"):
+            values[directive].append(blocked_uri)
+        return values
 
 
 class CspReportBlacklist(models.Model):
@@ -263,14 +266,14 @@ class CspReportBlacklist(models.Model):
     """
 
     directive = models.CharField(max_length=50, choices=DirectiveChoices.choices)
-    prefix = models.CharField(max_length=255)
+    blocked_uri = models.URLField()
 
-    objects = CspReportBlacklistManager()
+    objects = CspReportBlacklistQueryset().as_manager()
 
     class Meta:
-        verbose_name = "CSP Report Blacklist"
-        unique_together = ("directive", "prefix")
-        ordering = ["directive", "prefix"]
+        verbose_name_plural = verbose_name = "CSP Blacklist"
+        unique_together = ("directive", "blocked_uri")
+        ordering = ["directive", "blocked_uri"]
 
     def __str__(self) -> str:
-        return f"{self.directive} {self.prefix}"
+        return f"{self.directive} {self.blocked_uri}"

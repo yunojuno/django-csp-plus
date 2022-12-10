@@ -4,7 +4,7 @@ import pytest
 from django.core.cache import cache
 from django.test import RequestFactory
 
-from csp.policy import CACHE_KEY, format_as_csp, get_csp
+from csp.policy import CACHE_KEY_RULES, format_as_csp, get_csp
 
 
 @pytest.mark.parametrize(
@@ -23,11 +23,11 @@ def test_format_as_csp(directive, value, output):
 
 @pytest.mark.django_db
 def test_get_csp(rf: RequestFactory):
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_RULES)
     request = rf.get("/")
-    val = get_csp(request)
-    assert CACHE_KEY in cache
-    with mock.patch("csp.policy.refresh_cache") as mock_refresh:
-        assert get_csp(request) == val
+    val = get_csp(request, True)
+    assert CACHE_KEY_RULES in cache
+    with mock.patch("csp.policy.refresh_rules_cache") as mock_refresh:
+        assert get_csp(request, True) == val
         mock_refresh.assert_not_called()
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_RULES)

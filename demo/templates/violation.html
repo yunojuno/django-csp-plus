@@ -8,17 +8,33 @@
             This page contains a variety of 'img', 'script' and 'link' tags to illustrate how the
             CSP works.
         </p>
-        <img
-            src="https://yunojuno-prod-assets.s3.amazonaws.com/images/static_pages/maintenance.gif"
-        />
-        <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css?family=Karla:400,700"
-            crossorigin="anonymous"
-        />
-        <script src="https://maps.googleapis.com/maps/api/js?key=1&amp;libraries=places&amp;language=en&amp;region=GB"></script>
-        <script>
-            console.log("This is an inline script");
-        </script>
+        <p>
+            Image from Wikipedia
+            <img src="https://en.wikipedia.org/static/images/project-logos/enwiki-2x.png?foo" />
+        </p>
+        <p>
+            Stylesheet from fonts.googleapis.com
+            <link
+                rel="stylesheet"
+                href="https://fonts.googleapis.com/css?family=Karla:400,700"
+                crossorigin="anonymous"
+            />
+        </p>
+        <p>
+            Script from maps.googleapis.com
+            <script src="https://maps.googleapis.com/maps/api/js?key=1&amp;libraries=places&amp;language=en&amp;region=GB"></script>
+        </p>
+        <p>
+            Inline script
+            <script>
+                console.log("This is an inline script");
+            </script>
+        </p>
+        <p>
+            LinkedIn tracking pixel
+            <img
+                src="https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=443&url=https%3A%2F%2Fwww.example.com&tm=gtmv2"
+            />
+        </p>
     </body>
 </html>

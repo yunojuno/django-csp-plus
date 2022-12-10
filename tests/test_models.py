@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from csp.models import CspRule, ReportData
+from csp.models import CspReportBlacklist, CspRule, ReportData
 
 
 @pytest.mark.parametrize(
@@ -42,11 +42,11 @@ class TestReportData:
     def test_defaults(self) -> None:
         report = ReportData(
             **{
-                "blocked-uri": "https://yunojuno-prod-assets.s3.amazonaws.com/",
+                "blocked-uri": "https://example.com",
                 "effective-directive": "img-src",
             }
         )
-        assert report.blocked_uri == "https://yunojuno-prod-assets.s3.amazonaws.com/"
+        assert report.blocked_uri == "https://example.com"
         assert report.effective_directive == "img-src"
 
     @pytest.mark.parametrize(
@@ -60,3 +60,55 @@ class TestReportData:
     def test_mandatory_fields(self, report_data: dict) -> None:
         with pytest.raises(ValidationError):
             _ = ReportData(**report_data)
+
+    @pytest.mark.parametrize(
+        "input,output",
+        [
+            ("inline", "inline"),
+            ("'eval'", "'eval'"),
+            ("https://example.com", "https://example.com"),
+            ("https://example.com/", "https://example.com/"),
+            ("https://example.com/foo/", "https://example.com/foo/"),
+            ("https://example.com/foo/?bar", "https://example.com/foo/"),
+            ("https://example.com:80/foo/?bar", "https://example.com:80/foo/"),
+        ],
+    )
+    def test_blocked_uri(self, input, output) -> None:
+        data = ReportData(effective_directive="img-src", blocked_uri=input)
+        assert data.blocked_uri == output
+
+    def test_directive_replacement(self) -> None:
+        # effective_directive is empty, so violated_directive is injected
+        # in as a replacement
+        data = ReportData(blocked_uri="/", violated_directive="img-src")
+        assert data.effective_directive == "img-src"
+
+    def test_directive_validation(self) -> None:
+        # effective_directive is empty, so violated_directive is injected
+        # in as a replacement
+        with pytest.raises(ValidationError):
+            _ = ReportData(blocked_uri="/")
+
+
+@pytest.mark.django_db
+class TestBlacklist:
+    def get_blacklist_dict(self) -> dict:
+        return CspReportBlacklist.objects.all().order_by("id").as_dict()
+
+    def test_queryset_as_dict(self) -> None:
+        assert self.get_blacklist_dict() == {}
+        CspReportBlacklist.objects.create(directive="img-src", blocked_uri="inline")
+        assert self.get_blacklist_dict() == {"img-src": ["inline"]}
+        CspReportBlacklist.objects.create(
+            directive="img-src", blocked_uri="http://example.com"
+        )
+        assert self.get_blacklist_dict() == {
+            "img-src": ["inline", "http://example.com"]
+        }
+        CspReportBlacklist.objects.create(
+            directive="font-src", blocked_uri="https://google.com"
+        )
+        assert self.get_blacklist_dict() == {
+            "img-src": ["inline", "http://example.com"],
+            "font-src": ["https://google.com"],
+        }

@@ -102,7 +102,7 @@ class CspReportAdmin(admin.ModelAdmin):
         "request_count",
     )
     list_filter = ("effective_directive", "last_updated_at")
-    actions = ("add_rule",)
+    actions = ("add_rule", "add_to_blacklist")
 
     @admin.action(description="Add new CSP rule for selected violations.")
     def add_rule(self, request: HttpRequest, queryset: CspReportQuerySet) -> None:
@@ -118,11 +118,31 @@ class CspReportAdmin(admin.ModelAdmin):
         if duplicates:
             self.message_user(request, f"Ignored {duplicates} duplicates.", "warning")
 
+    @admin.action(description="Blacklist selected violations.")
+    def add_to_blacklist(
+        self, request: HttpRequest, queryset: CspReportQuerySet
+    ) -> None:
+        blacklisted = 0
+        duplicates = 0
+        for report in queryset:
+            obj, created = CspReportBlacklist.objects.get_or_create(
+                directive=report.effective_directive, blocked_uri=report.blocked_uri
+            )
+            report.delete()
+            if created:
+                blacklisted += 1
+            else:
+                duplicates += 1
+        if blacklisted:
+            self.message_user(request, f"Blacklisted {blacklisted} reports.", "success")
+        if duplicates:
+            self.message_user(request, f"Ignored {duplicates} duplicates.", "warning")
+
 
 @admin.register(CspReportBlacklist)
 class CspReportBlacklistAdmin(admin.ModelAdmin):
     list_display = (
         "directive",
-        "prefix",
+        "blocked_uri",
     )
     list_filter = ("directive",)

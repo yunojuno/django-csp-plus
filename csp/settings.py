@@ -14,15 +14,16 @@ CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 
 
-# Value 0..1 - used to tune the percentage of responses that get the
-# report-uri valuable if the reporting is too noisy.
+# Value 0..1 - used to tune the percentage of responses that get the report-uri
+# valuable if the reporting is too noisy. Set to 0.0 to disable report-uri
+# completely, or 1.0 to include it on all responses.
 CSP_REPORT_SAMPLING = float(getattr(settings, "CSP_REPORT_SAMPLING", 1.0))
 
 
-# Value 0..1 - used to throttle report-uri requests. The report-uri is
-# an open endpoint that accepts JSON payloads - and as such represents a
-# DOS vulnerability. Use this to throw away a percentage of reports
-# received without attempting to process them
+# Value 0..1 - used to throttle report-uri requests. The report-uri is an open
+# endpoint that accepts JSON payloads - and as such represents a DOS
+# vulnerability. Use this to throw away a percentage of reports received without
+# attempting to process them. Set to 1.0 to ignore all inbound reports.
 CSP_REPORT_THROTTLING = float(getattr(settings, "CSP_REPORT_THROTTLING", 0.0))
 
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import random
 from collections import defaultdict
 
 from django.core.cache import cache
@@ -9,26 +8,27 @@ from django.http import HttpRequest
 from django.urls import reverse
 
 from .models import CspRule, DirectiveChoices
-from .settings import CSP_CACHE_TIMEOUT, CSP_REPORT_SAMPLING, get_default_rules
+from .settings import CSP_CACHE_TIMEOUT, get_default_rules
 
 logger = logging.getLogger(__name__)
-
-CACHE_KEY = "csp::rules"
 PolicyType = dict[str, list[str]]
+
+CACHE_KEY_RULES = "csp::rules"
 
 
 def clear_cache() -> None:
     """Clear the cached CSP."""
     logger.debug("Clearing CSP cache")
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_RULES)
 
 
-def refresh_cache() -> None:
+def refresh_rules_cache() -> None:
     """Refresh the cached CSP."""
     logger.debug("Refreshing CSP cache")
     policy = build_policy()
-    csp_header = format_as_csp(policy)
-    cache.set(CACHE_KEY, csp_header, CSP_CACHE_TIMEOUT)
+    part_one = format_as_csp({k: v for k, v in policy.items() if k != "report-uri"})
+    part_two = format_as_csp({k: v for k, v in policy.items() if k == "report-uri"})
+    cache.set(CACHE_KEY_RULES, (part_one, part_two), CSP_CACHE_TIMEOUT)
 
 
 def _dedupe(values: list[str]) -> list[str]:
@@ -66,7 +66,6 @@ def build_policy() -> PolicyType:
             policy[directive].append(value)
         else:
             logger.debug('Ignoring unknown directive "%s"', directive)
-    # format and dedupe the values
     return {k: _dedupe(v) for k, v in policy.items()}
 
 
@@ -88,19 +87,15 @@ def _context(request: HttpRequest) -> dict[str, str]:
     context = {"report_uri": reverse("csp:report_uri")}
     if nonce := getattr(request, "csp_nonce", ""):
         context["nonce"] = f"'nonce-{nonce}'"
-    # CSP_REPORT_SAMPLING is a float 0..1 - if we're above the value,
-    # then strip out the report-uri so that we don't send reports.
-    if random.random() > CSP_REPORT_SAMPLING:  # noqa: S311
-        logger.debug("Removing report_uri from CSP (sampling)")
-        context["report_uri"] = ""
     return context
 
 
-def get_csp(request: HttpRequest) -> str:
+def get_csp(request: HttpRequest, add_report_uri: bool) -> str:
     """Fetch the CSP from the cache, or rebuild if it's missing."""
-    if csp := cache.get(CACHE_KEY):
+    if cached_csp := cache.get(CACHE_KEY_RULES):
         logger.debug("Found cached CSP")
+        csp = "; ".join(cached_csp) if add_report_uri else cached_csp[0]
         return csp.format(**_context(request))
     logger.debug("No cached CSP - rebuilding policy")
-    refresh_cache()
-    return get_csp(request)
+    refresh_rules_cache()
+    return get_csp(request, add_report_uri)
