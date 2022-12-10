@@ -75,10 +75,10 @@ def format_as_csp(policy: PolicyType) -> str:
     for directive, values in policy.items():
         if not values:
             continue
-        # dedupe and recombine into a single space-delimited string
+        # combine values into a single space-delimited string
         value_str = " ".join(values)
         directives.append(f"{directive} {value_str}")
-    # csp is now a list of directives
+    # combine directives into a ";" delimited str - the CSP.
     return "; ".join(directives).strip()
 
 
@@ -93,7 +93,7 @@ def _context(request: HttpRequest) -> dict[str, str]:
 def get_csp(request: HttpRequest, add_report_uri: bool) -> str:
     """Fetch the CSP from the cache, or rebuild if it's missing."""
     if cached_csp := cache.get(CACHE_KEY_RULES):
-        logger.debug("Found cached CSP")
+        logger.debug("Found cached CSP (add report-uri: %s)", add_report_uri)
         csp = "; ".join(cached_csp) if add_report_uri else cached_csp[0]
         return csp.format(**_context(request))
     logger.debug("No cached CSP - rebuilding policy")

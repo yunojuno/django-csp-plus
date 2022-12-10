@@ -12,10 +12,7 @@ def strip_fragment(url: str) -> str:
 
 def strip_query(url: str) -> str:
     """Strip the query, fragment from a url."""
-    scheme, netloc, path, params, _, _ = urlparse(url)
-    if not scheme:
-        return url
-    return urlunparse((scheme, netloc, path, params, "", ""))
+    return url.split("?")[0] if url else url
 
 
 def strip_path(url: str) -> str:
