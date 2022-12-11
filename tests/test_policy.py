@@ -16,13 +16,13 @@ from csp.policy import CACHE_KEY_RULES, format_as_csp, get_csp
         ("script-src", ["'self'"], "script-src 'self'"),
     ],
 )
-def test_format_as_csp(directive, value, output):
+def test_format_as_csp(directive: str, value: list[str], output: str) -> None:
     csp = {directive: value}
     assert format_as_csp(csp) == output
 
 
 @pytest.mark.django_db
-def test_get_csp(rf: RequestFactory):
+def test_get_csp(rf: RequestFactory) -> None:
     cache.delete(CACHE_KEY_RULES)
     request = rf.get("/")
     val = get_csp(request, True)

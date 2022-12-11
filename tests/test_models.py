@@ -34,7 +34,7 @@ from csp.models import CspReportBlacklist, CspRule, ReportData
         ("ws://example.com", "ws://example.com"),
     ],
 )
-def test_clean_value(input, output) -> None:
+def test_clean_value(input: str, output: str) -> None:
     assert CspRule.clean_value(input) == output
 
 
@@ -73,7 +73,7 @@ class TestReportData:
             ("https://example.com:80/foo/?bar", "https://example.com:80/foo/"),
         ],
     )
-    def test_blocked_uri(self, input, output) -> None:
+    def test_blocked_uri(self, input: str, output: str) -> None:
         data = ReportData(effective_directive="img-src", blocked_uri=input)
         assert data.blocked_uri == output
 

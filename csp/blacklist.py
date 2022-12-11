@@ -4,7 +4,7 @@ import logging
 
 from django.core.cache import cache
 
-from .models import CspReport, CspReportBlacklist
+from .models import CspReportBlacklist, ReportData
 from .settings import CSP_CACHE_TIMEOUT
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,10 @@ def get_blacklist() -> PolicyType:
     return get_blacklist()
 
 
-def is_blacklisted(report: CspReport) -> bool:
+def is_blacklisted(report: ReportData) -> bool:
     """Return True if the report should be ignored."""
+    # blacklist anything that doesn't have an effective_directive
+    if not report.effective_directive:
+        return True
     blacklist = get_blacklist()
     return report.blocked_uri in blacklist.get(report.effective_directive, {})

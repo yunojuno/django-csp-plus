@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def add_report_uri() -> bool:
     """Return True if we should add the report-uri directive."""
-    return random.random() <= CSP_REPORT_SAMPLING  # noqqa: S311
+    return random.random() <= CSP_REPORT_SAMPLING  # noqa: S311
 
 
 class CspNonceMiddleware:

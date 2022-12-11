@@ -27,5 +27,5 @@ from csp.utils import strip_path
         ("blob:", "blob:"),
     ],
 )
-def test_strip_path(input, output) -> None:
+def test_strip_path(input: str, output: str) -> None:
     assert strip_path(input) == output
