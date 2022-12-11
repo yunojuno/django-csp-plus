@@ -69,6 +69,24 @@ Bool kill switch for the middleware. Defaults to `False` (disabled).
 
 Bool - set to `True` to run in report-only mode. Defaults to `True`.
 
+### `CSP_REPORT_SAMPLING`
+
+Float - used as a percentage (0.0 to 1.0) of responses on which to 
+include the `report-uri` directive. This can be used to turn down
+the noise - once you have a stable CSP there is no point having
+every single request include the reporting directive - you need a
+trickle not a flood.
+
+### `CSP_REPORT_THROTTLING`
+
+Float - used as a percentage (0.0 to 1.0) of reporting violation
+requests to throttle (throw away). This is used to control potentially
+malicious violation reporting. The reporting endpoint is public, and
+accepts JSON payloads, so is open to abuse (sending very large, or
+malformed JSON) and is a potential DOS vulnerability. If you set this
+value to 1.0 then all inbound reporting requests are thrown away
+without processing. Use in extremis.
+
 ### `CSP_CACHE_TIMEOUT`
 
 Integer - the cache timeout for the templated CSP. Defaults to 600 (5
