@@ -63,36 +63,47 @@ the same for all users / requests).
 
 ### `CSP_ENABLED`
 
-Bool kill switch for the middleware. Defaults to `False` (disabled).
+`bool`, default = `False`
+
+Kill switch for the middleware. Defaults to `False` (disabled).
 
 ### `CSP_REPORT_ONLY`
 
-Bool - set to `True` to run in report-only mode. Defaults to `True`.
+`bool`, default = `True`
+
+Set to `True` to run in report-only mode. Defaults to `True`.
 
 ### `CSP_REPORT_SAMPLING`
 
-Float - used as a percentage (0.0 to 1.0) of responses on which to 
-include the `report-uri` directive. This can be used to turn down
-the noise - once you have a stable CSP there is no point having
-every single request include the reporting directive - you need a
-trickle not a flood.
+`float`, default = `1.0`
+
+Float (0.0-1.0) - used as a percentage of responses on which to include
+the `report-uri` directive. This can be used to turn down the noise -
+once you have a stable CSP there is no point having every single request
+include the reporting directive - you need a trickle not a flood.
 
 ### `CSP_REPORT_THROTTLING`
 
-Float - used as a percentage (0.0 to 1.0) of reporting violation
-requests to throttle (throw away). This is used to control potentially
-malicious violation reporting. The reporting endpoint is public, and
-accepts JSON payloads, so is open to abuse (sending very large, or
-malformed JSON) and is a potential DOS vulnerability. If you set this
-value to 1.0 then all inbound reporting requests are thrown away
-without processing. Use in extremis.
+`float`, default = `0.0`
+
+Float (0.0-1.0) - used as a percentage of reporting violation requests
+to throttle (throw away). This is used to control potentially malicious
+violation reporting. The reporting endpoint is public, and accepts JSON
+payloads, so is open to abuse (sending very large, or malformed JSON)
+and is a potential DOS vulnerability. If you set this value to 1.0 then
+all inbound reporting requests are thrown away without processing. Use
+in extremis.
 
 ### `CSP_CACHE_TIMEOUT`
 
-Integer - the cache timeout for the templated CSP. Defaults to 600 (5
-min)
+`int`, default = `600`
+
+The cache timeout for the templated CSP. Defaults to 5 min (600s).
 
 ### `CSP_FILTER_REQUEST_FUNC`
+
+`Callable[[HttpRequest], bool]` - defaults to returning `True` for all
+requests
 
 A callable that takes `HttpRequest` and returns a bool - if False, the
 middleware will not add the response header. Defaults to return `True`
@@ -100,12 +111,17 @@ for all requests.
 
 ### `CSP_FILTER_RESPONSE_FUNC`
 
+`Callable[[HttpResponse], bool]` - defaults to `True` for all
+`text/html` responses.
+
 Callable that takes `HttpResponse` and returns a bool - if `False` the
 middleware will not add the response header. Defaults to a function that
 filters only responses with `Content-Type: text/html` - which results in
 static content / JSON responses _not_ getting the CSP header.
 
 ### `CSP_DEFAULTS`
+
+`dict[str, list[str]]`
 
 The default (baseline) CSP as a dict of `{directive: values}`. This is
 extended by the runtime rules (i.e. not overwritten). Defaults to:
