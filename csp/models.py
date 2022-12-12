@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
 from pydantic import BaseModel, Field, root_validator, validator
 
+from .settings import PolicyType
 from .utils import strip_query
 
 logger = logging.getLogger(__name__)
@@ -248,7 +249,7 @@ def convert_report(report: CspReport, enable: bool = True) -> CspRule | None:
 
 
 class CspReportBlacklistQueryset(models.QuerySet):
-    def as_dict(self) -> dict[str, list[str]]:
+    def as_dict(self) -> PolicyType:
         values = defaultdict(list)
         for directive, blocked_uri in self.values_list("directive", "blocked_uri"):
             values[directive].append(blocked_uri)

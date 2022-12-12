@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Callable
+from typing import Callable, TypeAlias
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
+
+PolicyType: TypeAlias = dict[str, list[str]]
+
 
 # If False then the middleware is disabled completely
 CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
@@ -14,17 +17,33 @@ CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 
 
-# Value 0..1 - used to tune the percentage of responses that get the report-uri
-# valuable if the reporting is too noisy. Set to 0.0 to disable report-uri
-# completely, or 1.0 to include it on all responses.
+# Value 0..1 - used to tune the percentage of responses that get the
+# report-uri valuable if the reporting is too noisy. Set to 0.0 to
+# disable report-uri completely, or 1.0 to include it on all responses.
 CSP_REPORT_SAMPLING = float(getattr(settings, "CSP_REPORT_SAMPLING", 1.0))
 
 
-# Value 0..1 - used to throttle report-uri requests. The report-uri is an open
-# endpoint that accepts JSON payloads - and as such represents a DOS
-# vulnerability. Use this to throw away a percentage of reports received without
-# attempting to process them. Set to 1.0 to ignore all inbound reports.
+# Value 0..1 - used to throttle report-uri requests. The report-uri is
+# an open endpoint that accepts JSON payloads - and as such represents a
+# DOS vulnerability. Use this to throw away a percentage of reports
+# received without attempting to process them. Set to 1.0 to ignore all
+# inbound reports.
 CSP_REPORT_THROTTLING = float(getattr(settings, "CSP_REPORT_THROTTLING", 0.0))
+
+
+# dict to downgrade unsupported directives when converting to rules,
+# e.g. if the violation from Chrome is "script-src-elem", which is not
+# universally supported, then convert it to "script-src" on the fly.
+CSP_REPORT_DIRECTIVE_DOWNGRADE: dict[str, str] = getattr(
+    settings,
+    "CSP_REPORT_DIRECTIVE_MAP",
+    {
+        "script-src-elem": "script-src",
+        "script-src-attr": "script-src",
+        "style-src-elem": "style-src",
+        "style-src-attr": "style-src",
+    },
+)
 
 
 # Name of the header value to use based on CSP_REPORT_ONLY
@@ -60,7 +79,7 @@ process_response: Callable[[HttpResponse], bool] = getattr(
 
 
 # Default rules from https://content-security-policy.com/
-def get_default_rules() -> dict[str, list[str]]:
+def get_default_rules() -> PolicyType:
     if defaults := getattr(settings, "CSP_DEFAULTS", None):
         # if we don't return a deepcopy alterations to the
         # dictionary will update the lists, meaning that

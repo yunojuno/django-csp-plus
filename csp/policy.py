@@ -8,10 +8,9 @@ from django.http import HttpRequest
 from django.urls import reverse
 
 from .models import CspRule, DirectiveChoices
-from .settings import CSP_CACHE_TIMEOUT, get_default_rules
+from .settings import CSP_CACHE_TIMEOUT, PolicyType, get_default_rules
 
 logger = logging.getLogger(__name__)
-PolicyType = dict[str, list[str]]
 
 CACHE_KEY_RULES = "csp::rules"
 
