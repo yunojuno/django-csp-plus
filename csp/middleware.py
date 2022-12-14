@@ -14,6 +14,8 @@ from .settings import (
     CSP_ENABLED,
     CSP_REPORT_SAMPLING,
     CSP_RESPONSE_HEADER,
+    REPORT_TO_HEADER,
+    REPORTING_ENDPOINTS_HEADER,
     process_request,
     process_response,
 )
@@ -57,6 +59,17 @@ class CspHeaderMiddleware:
 
     def __call__(self, request: HttpRequest) -> HttpResponse | None:
         response: HttpResponse = self.get_response(request)
-        if process_request(request) and process_response(response):
-            response.headers[CSP_RESPONSE_HEADER] = get_csp(request, add_report_uri())
+        if not (process_request(request) and process_response(response)):
+            return response
+        self.add_csp_header(request, response)
+        self.add_reporting_headers(response)
         return response
+
+    def add_csp_header(self, request: HttpRequest, response: HttpResponse) -> None:
+        response.headers[CSP_RESPONSE_HEADER] = get_csp(request, add_report_uri())
+
+    def add_reporting_headers(self, response: HttpResponse) -> None:
+        if REPORT_TO_HEADER:
+            response.headers["Report-To"] = REPORT_TO_HEADER
+        if REPORTING_ENDPOINTS_HEADER:
+            response.headers["Reporting-Endpoints"] = REPORTING_ENDPOINTS_HEADER
