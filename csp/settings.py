@@ -16,6 +16,39 @@ CSP_ENABLED = bool(getattr(settings, "CSP_ENABLED", False))
 # If True then set the report-only attr on the CSP
 CSP_REPORT_ONLY = bool(getattr(settings, "CSP_REPORT_ONLY", True))
 
+# === reporting ===
+#
+# This is complicated - the reporting process is in a state of flux, and
+# there are three scenarios to support in order to handle today's
+# browsers and the newer, propoosed standards.
+#
+# Phase 1 (today): reporting uses the "report-uri <uri>"  CSP directive
+#
+# Phase 2 (today (partial)): reporting uses the "report-to <endpoint>"
+# SCP directive, which in turn relies on the browser reporting API.
+#
+# Phase 2.1 the reporting API uses the "Report-To" HTTP header
+#
+# Phase 2.2 the reporting API uses the new "Reporting-Endpoints" header.
+#
+# We make no attempt to control this - but we do provide support for the
+# reporting API headers - if you supply them, we'll add them.
+#
+# See https://developer.chrome.com/blog/reporting-api-migration/#migration-steps-for-csp-reporting  # noqa: E501
+# for a migration plan, and https://www.w3.org/TR/reporting-1/ for the spec.
+
+
+# The Report-To header value - if supplied it will be added to the response -
+# and you can then add a "report-to: <endpoint>" directive to the CSP.
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/report-to  # noqa: E501
+REPORT_TO_HEADER = getattr(settings, "REPORT_TO_HEADER", None)
+
+
+# The Reporting-Endpoints value - if supplied it will be added to the response -
+# and you can then add a "report-to: <endpoint>" directive to the CSP.
+# https://developer.chrome.com/blog/reporting-api-migration/#migration-steps-for-csp-reporting  # noqa: E501
+REPORTING_ENDPOINTS_HEADER = getattr(settings, "REPORTING_ENDPOINTS_HEADER", None)
+
 
 # Value 0..1 - used to tune the percentage of responses that get the
 # report-uri valuable if the reporting is too noisy. Set to 0.0 to

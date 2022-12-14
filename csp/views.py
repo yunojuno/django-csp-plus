@@ -107,7 +107,7 @@ def csp_diagnostics(request: HttpRequest) -> HttpResponse:
     csp = get_csp(request, True)
     return render(
         request,
-        "diagnostics.txt",
+        "csp/diagnostics.txt",
         {
             "default_rules": default_rules,
             "extra_rules": extra_rules,
