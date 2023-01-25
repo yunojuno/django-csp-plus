@@ -100,6 +100,13 @@ class DirectiveChoices(models.TextChoices):
     STYLE_SRC_ATTR = ("style-src-attr", "style-src-attr")
     STYLE_SRC_ELEM = ("style-src-elem", "style-src-elem")
     WORKER_SRC = ("worker-src", "worker-src")
+    # NB: prefetch-src was part of the CSP spec for years while unanimously being
+    # unsupported by browsers at the same time. It eventually got dropped again in
+    # https://github.com/w3c/webappsec-csp/pull/582 (2022-12), but ultimately got
+    # released into the wild with Safari 16.3 (2023-01). It's highly likely to
+    # disappear again, but will create violation reports in the meantime and is
+    # therefore listed as an available option for CSP rules here.
+    PREFETCH_SRC = ("prefetch-src", "prefetch-src [DEPRECATED]")
 
 
 class CspRuleQuerySet(models.QuerySet):
