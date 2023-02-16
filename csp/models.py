@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from django.db import models
 from django.db.models import F
@@ -92,11 +92,11 @@ class DirectiveChoices(models.TextChoices):
     REPORT_TO = ("report-to", "report-to")
     REPORT_URI = ("report-uri", "report-uri")
     SCRIPT_SRC = ("script-src", "script-src")
-    SCRIPT_SRC_ATTR = ("script-src-attr", "script-src-attr")
-    SCRIPT_SRC_ELEM = ("script-src-elem", "script-src-elem")
+    SCRIPT_SRC_ATTR = ("script-src-attr", "script-src-attr [CAUTION]")
+    SCRIPT_SRC_ELEM = ("script-src-elem", "script-src-elem [CAUTION]")
     STYLE_SRC = ("style-src", "style-src")
-    STYLE_SRC_ATTR = ("style-src-attr", "style-src-attr")
-    STYLE_SRC_ELEM = ("style-src-elem", "style-src-elem")
+    STYLE_SRC_ATTR = ("style-src-attr", "style-src-attr [CAUTION]")
+    STYLE_SRC_ELEM = ("style-src-elem", "style-src-elem [CAUTION]")
     WORKER_SRC = ("worker-src", "worker-src")
 
 
@@ -139,6 +139,8 @@ class CspRule(models.Model):
     directive = models.CharField(max_length=50, choices=DirectiveChoices.choices)
     value = models.CharField(max_length=255)
     enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=tz_now)
+    modified_at = models.DateTimeField(default=tz_now)
 
     objects = CspRuleManager.from_queryset(CspRuleQuerySet)()
 
@@ -149,6 +151,12 @@ class CspRule(models.Model):
 
     def __str__(self) -> str:
         return f"{self.directive} {self.value}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.modified_at = tz_now()
+        if "update_fields" in kwargs:
+            kwargs["update_fields"].append("modified_at")
+        super().save(*args, **kwargs)
 
     @classmethod
     def clean_value(cls, value: str) -> str:
