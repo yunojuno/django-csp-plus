@@ -19,7 +19,6 @@ PydanticValues: TypeAlias = dict[str, str | None]
 
 
 class ReportData(BaseModel):
-
     # browser support for CSP reports turns out to be patchy at best -
     # all fields are optional on the way in, but we need at least the
     # violated_directive and the blocked_uri to be able to make sense of
@@ -72,13 +71,11 @@ class ReportData(BaseModel):
 
 
 class DispositionChoices(models.TextChoices):
-
     ENFORCE = ("enforce", "Enforce")
     REPORT = ("report", "Report only")
 
 
 class DirectiveChoices(models.TextChoices):
-
     BASE_URI = ("base-uri", "base-uri")
     CHILD_SRC = ("child-src", "child-src")
     CONNECT_SRC = ("connect-src", "connect-src")
@@ -116,7 +113,6 @@ class CspRuleManager(models.Manager):
 
 
 class CspRule(models.Model):
-
     REQUIRE_SINGLE_QUOTE = [
         "nonce",
         "none",
@@ -189,7 +185,6 @@ class CspReportManager(models.Manager):
 
 
 class CspReport(models.Model):
-
     # {
     #     'csp-report': {
     #         'document-uri': 'http://127.0.0.1:8000/test/',

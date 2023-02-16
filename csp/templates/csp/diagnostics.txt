@@ -1,17 +1,21 @@
 Default rules (from settings):
-
 {% for directive, values in default_rules.items %}
   {{ directive }}: {{ values|safe }}{% endfor %}
 
 ---
 
-Dynamic rules (from database):
+Directive downgrades (from settings):
+{% for directive, value in downgrades.items %}
+  {{ directive }} -> {{ value|safe }}{% endfor %}
 
+---
+
+Dynamic rules (from database):
 {% for directive, value in extra_rules %}
   {{ directive }}: {{ value|safe }}{% empty %}(none){% endfor %}
 
 ---
 
 Combined CSP:
-
-{{ csp|safe }}
+{% for directive in csp %}
+  {{ directive|safe }};{% endfor %}

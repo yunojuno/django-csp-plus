@@ -13,8 +13,12 @@ from pydantic import ValidationError
 
 from .blacklist import is_blacklisted
 from .models import CspReport, CspRule, ReportData
-from .policy import get_csp, get_default_rules
-from .settings import CSP_REPORT_THROTTLING
+from .policy import get_csp
+from .settings import (
+    CSP_REPORT_DIRECTIVE_DOWNGRADE,
+    CSP_REPORT_THROTTLING,
+    get_default_rules,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -104,14 +108,15 @@ def report_uri(request: HttpRequest) -> HttpResponse:
 def csp_diagnostics(request: HttpRequest) -> HttpResponse:
     default_rules = get_default_rules()
     extra_rules = list(CspRule.objects.enabled().directive_values())
-    csp = get_csp(request, True)
+    csp_list = [x.strip() for x in get_csp(request, True).split(";")]
     return render(
         request,
         "csp/diagnostics.txt",
         {
             "default_rules": default_rules,
             "extra_rules": extra_rules,
-            "csp": csp,
+            "downgrades": CSP_REPORT_DIRECTIVE_DOWNGRADE,
+            "csp": csp_list,
         },
         content_type="text/plain",
     )

@@ -47,6 +47,8 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-django = "*"
+# forced dependency from flake8-bandit
+pyyaml = "*"
 tox = "*"
 
 [build-system]
