@@ -73,25 +73,26 @@ def build_policy() -> PolicyType:
 
     """
     logger.debug("Building new CSP")
+
     # return dict of {directive: [values]}
     policy: PolicyType = defaultdict(list)
-    for directive, value in get_default_rules_expanded():
+
+    def add_directive(directive: str, value: str) -> None:
         directive = _downgrade(directive)
         if directive in DirectiveChoices.values:
             logger.debug('Adding "%s" to directive "%s"', value, directive)
             policy[directive].append(value)
         else:
             logger.debug('Ignoring unknown directive "%s"', directive)
+
+    for directive, value in get_default_rules_expanded():
+        add_directive(directive, value)
+
     # returns list of additional (directive, value) tuples.
     new_rules = CspRule.objects.enabled().directive_values()
-    # update the defaults with the additional rules.
     for directive, value in new_rules:
-        directive = _downgrade(directive)
-        if directive in DirectiveChoices.values:
-            logger.debug('Adding "%s" to directive "%s"', value, directive)
-            policy[directive].append(value)
-        else:
-            logger.debug('Ignoring unknown directive "%s"', directive)
+        add_directive(directive, value)
+
     return {k: _dedupe(v) for k, v in policy.items()}
 
 
