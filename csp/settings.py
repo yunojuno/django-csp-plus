@@ -129,3 +129,17 @@ def get_default_rules() -> PolicyType:
         "style-src": ["'self'"],
         "report-uri": ["{report_uri}"],
     }
+
+
+def get_default_rules_expanded() -> list[tuple[str, str]]:
+    """
+    Return rules as a list of (directive, rule) tuples.
+
+    This format is less intuitive than the dict, but it's compatible
+    with the ".values('directive', 'value')" output from the database,
+    which makes it easier to blend in.
+
+    """
+    # Ask ChatGPT: how can I expand a dictionary of lists in python to a
+    # list of tuples?
+    return [(k, v) for k, l in get_default_rules().items() for v in l]

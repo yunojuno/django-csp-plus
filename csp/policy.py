@@ -8,7 +8,12 @@ from django.http import HttpRequest
 from django.urls import reverse
 
 from .models import CspRule, DirectiveChoices
-from .settings import CSP_CACHE_TIMEOUT, PolicyType, get_default_rules
+from .settings import (
+    CSP_CACHE_TIMEOUT,
+    CSP_REPORT_DIRECTIVE_DOWNGRADE,
+    PolicyType,
+    get_default_rules_expanded,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +39,21 @@ def _dedupe(values: list[str]) -> list[str]:
     return list({CspRule.clean_value(v) for v in values})
 
 
+def _downgrade(directive: str) -> str:
+    """
+    Downgrade a directive if configured.
+
+    Some directives have poor support, so we downgrade them on the fly -
+    a `script-src-elem` for instance will become `script-src` if defined
+    in CSP_REPORT_DIRECTIVE_DOWNGRADE.
+
+    """
+    if directive in CSP_REPORT_DIRECTIVE_DOWNGRADE:
+        logger.debug("Downgrading directive '%s'", directive)
+        return CSP_REPORT_DIRECTIVE_DOWNGRADE[directive]
+    return directive
+
+
 def build_policy() -> PolicyType:
     """
     Build the CSP by combining default settings and CspRules.
@@ -55,11 +75,18 @@ def build_policy() -> PolicyType:
     logger.debug("Building new CSP")
     # return dict of {directive: [values]}
     policy: PolicyType = defaultdict(list)
-    policy.update(get_default_rules())
+    for directive, value in get_default_rules_expanded():
+        directive = _downgrade(directive)
+        if directive in DirectiveChoices.values:
+            logger.debug('Adding "%s" to directive "%s"', value, directive)
+            policy[directive].append(value)
+        else:
+            logger.debug('Ignoring unknown directive "%s"', directive)
     # returns list of additional (directive, value) tuples.
     new_rules = CspRule.objects.enabled().directive_values()
     # update the defaults with the additional rules.
     for directive, value in new_rules:
+        directive = _downgrade(directive)
         if directive in DirectiveChoices.values:
             logger.debug('Adding "%s" to directive "%s"', value, directive)
             policy[directive].append(value)
