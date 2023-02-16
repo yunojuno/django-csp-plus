@@ -4,7 +4,8 @@ import pytest
 from django.core.cache import cache
 from django.test import RequestFactory
 
-from csp.policy import CACHE_KEY_RULES, format_as_csp, get_csp
+from csp.policy import CACHE_KEY_RULES, _downgrade, format_as_csp, get_csp
+from csp.settings import CSP_REPORT_DIRECTIVE_DOWNGRADE
 
 
 @pytest.mark.parametrize(
@@ -31,3 +32,9 @@ def test_get_csp(rf: RequestFactory) -> None:
         assert get_csp(request, True) == val
         mock_refresh.assert_not_called()
     cache.delete(CACHE_KEY_RULES)
+
+
+def test__downgrade() -> None:
+    assert CSP_REPORT_DIRECTIVE_DOWNGRADE["script-src-elem"] == "script-src"
+    assert _downgrade("script-src-elem") == "script-src"
+    assert _downgrade("made-up-directive") == "made-up-directive"
