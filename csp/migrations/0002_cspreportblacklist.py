@@ -6,7 +6,6 @@ from csp.models import DirectiveChoices
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("csp", "0001_initial"),
     ]

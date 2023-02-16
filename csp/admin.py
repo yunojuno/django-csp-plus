@@ -15,7 +15,6 @@ from .utils import strip_path
 
 @admin.register(CspRule)
 class CspRuleAdmin(admin.ModelAdmin):
-
     list_display = ("directive", "value", "_enabled")
     list_filter = ("directive", "enabled")
     actions = [
