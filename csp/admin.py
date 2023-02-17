@@ -15,8 +15,10 @@ from .utils import strip_path
 
 @admin.register(CspRule)
 class CspRuleAdmin(admin.ModelAdmin):
-    list_display = ("directive", "value", "_enabled")
-    list_filter = ("directive", "enabled")
+    list_display = ("directive", "value", "_enabled", "modified_at")
+    list_filter = ("created_at", "modified_at", "directive", "enabled")
+    search_fields = ("value",)
+    ordering = ("-modified_at",)
     actions = [
         "enable_selected_rules",
         "disable_selected_rules",

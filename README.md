@@ -59,6 +59,15 @@ You can add two special placeholders in the rules: `{nonce}` and
 The CSP is cached for all requests with the placeholder text in (so it's
 the same for all users / requests).
 
+### Directives
+
+Some directives are deprecated, and others not-yet implemented. The
+canonical example is the `style-src-elem` directive (and its `style-`
+and `-attr`) siblings which are _not_ supported by Safari. In order to
+highlight these the corresponding directive choice labels have been
+amended. Treat with caution as setting these attributes may have
+unintended consequences.
+
 ## Settings
 
 ### `CSP_ENABLED`
