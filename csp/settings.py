@@ -69,7 +69,7 @@ CSP_REPORT_THROTTLING = float(getattr(settings, "CSP_REPORT_THROTTLING", 0.0))
 # universally supported, then convert it to "script-src" on the fly.
 CSP_REPORT_DIRECTIVE_DOWNGRADE: dict[str, str] = getattr(
     settings,
-    "CSP_REPORT_DIRECTIVE_MAP",
+    "CSP_REPORT_DIRECTIVE_DOWNGRADE",
     {
         "script-src-elem": "script-src",
         "script-src-attr": "script-src",

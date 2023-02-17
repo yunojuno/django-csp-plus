@@ -68,6 +68,13 @@ highlight these the corresponding directive choice labels have been
 amended. Treat with caution as setting these attributes may have
 unintended consequences.
 
+#### Downgrading directives
+
+In some instances you may want to "downgrade" a directive - for instance
+converting all `script-src-elem` directives to `script-src` (for
+compatibility reasons). This can be done using the
+`CSP_REPORT_DIRECTIVE_DOWNGRADE` setting.
+
 ## Settings
 
 ### `CSP_ENABLED`
@@ -75,6 +82,21 @@ unintended consequences.
 `bool`, default = `False`
 
 Kill switch for the middleware. Defaults to `False` (disabled).
+
+### `CSP_REPORT_DIRECTIVE_DOWNGRADE`
+
+`dict[str, str]`, default =
+```python
+{
+    "script-src-elem": "script-src",
+    "script-src-attr": "script-src",
+    "style-src-elem": "style-src",
+    "style-src-attr": "style-src",
+}
+```
+
+This is used to transparently "downgrade" any directives to a different
+directive, and is primarily used for managing compatibility.
 
 ### `CSP_REPORT_ONLY`
 
