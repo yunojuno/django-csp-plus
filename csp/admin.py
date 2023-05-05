@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db.utils import IntegrityError
 from django.http import HttpRequest
+from django.utils.safestring import mark_safe
 
 from .models import (
     CspReport,
@@ -101,9 +102,17 @@ class CspReportAdmin(admin.ModelAdmin):
         "created_at",
         "last_updated_at",
         "request_count",
+        "show_violation",
     )
     list_filter = ("effective_directive", "last_updated_at")
     actions = ("add_rule", "add_to_blacklist")
+
+    @admin.display(description="Sample violation")
+    def show_violation(self, obj: CspReport) -> str:
+        if obj.effective_directive == "img-src":
+            return mark_safe(f"<img src='{obj.blocked_uri}' />")
+        return f"Directive '{obj.effective_directive}' not supported yet."
+
 
     @admin.action(description="Add new CSP rule for selected violations.")
     def add_rule(self, request: HttpRequest, queryset: CspReportQuerySet) -> None:
