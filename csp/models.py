@@ -2,20 +2,18 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, TypeAlias
+from typing import Any
 
 from django.db import models
 from django.db.models import F
 from django.db.utils import IntegrityError
 from django.utils.timezone import now as tz_now
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .settings import PolicyType
 from .utils import strip_query
 
 logger = logging.getLogger(__name__)
-
-PydanticValues: TypeAlias = dict[str, str | None]
 
 
 class ReportData(BaseModel):
@@ -28,17 +26,18 @@ class ReportData(BaseModel):
     # min_length ensures we don't have an empty string
     blocked_uri: str = Field(alias="blocked-uri", min_length=1)
     # we must have one of these - validate_directives enforces this
-    effective_directive: str | None = Field(alias="effective-directive")
-    violated_directive: str | None = Field(alias="violated-directive")
+    effective_directive: str | None = Field(None, alias="effective-directive")
+    violated_directive: str | None = Field(None, alias="violated-directive")
     # optional
     disposition: str | None = Field("", alias="disposition")
     document_uri: str | None = Field("", alias="document-uri")
-    original_policy: str | None = Field(alias="original-policy")
-    referrer: str | None = Field(alias="referrer")
-    script_sample: str | None = Field(alias="script-sample")
+    original_policy: str | None = Field(None, alias="original-policy")
+    referrer: str | None = Field(None, alias="referrer")
+    script_sample: str | None = Field(None, alias="script-sample")
     status_code: str | None = Field(0, alias="status-code")
 
-    @validator("document_uri", "blocked_uri")
+    @field_validator("document_uri", "blocked_uri")
+    @classmethod
     def strip_uri(cls, uri: str) -> str:
         """
         Strip querystring and truncate to fit model length.
@@ -49,25 +48,24 @@ class ReportData(BaseModel):
         """
         return strip_query(uri)[:200] if uri else ""
 
-    @root_validator
-    def validate_directives(cls, values: PydanticValues) -> PydanticValues:
+    @model_validator(mode="after")
+    def validate_directives(self) -> ReportData:
         """Ensure that we have either effective_directive or violated_directive."""
-        if values.get("effective_directive", ""):
-            return values
+        if self.effective_directive:
+            return self
         # if effective_directive is empty, but violated_directive is not,
-        # then udpate the former with the latter.
-        if violated_directive := values.get("violated_directive", ""):
+        # then update the former with the latter.
+        if self.violated_directive:
             logger.debug(
                 "'effective_directive' missing - using 'violated_directive' attr."
             )
-            values["effective_directive"] = violated_directive
-            return values
+            self.effective_directive = self.violated_directive
+            return self
         raise ValueError(
             "Either 'effective_directive' or 'violated_directive' must be present."
         )
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True)
 
 
 class DispositionChoices(models.TextChoices):
