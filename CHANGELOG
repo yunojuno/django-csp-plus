@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.0.0] - 2023-02-17
+## [1.0.0] - 2023-02-17
 
 - Drop support for Python < 3.10
 - Drop support for Pydantic < 2
