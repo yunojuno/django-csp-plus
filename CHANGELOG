@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2023-02-17
+
+- Drop support for Python < 3.10
+- Drop support for Pydantic < 2
+
 ## [0.10.0] - 2023-02-17
 
 - Improve admin list view to include date filters and value search [#8]
