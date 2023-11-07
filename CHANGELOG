@@ -2,10 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - 2023-02-17
+## [3.0.1] - 2023-11-07
+
+- No code change. Fix for CHANGELOG.
+
+## [3.0.0] - 2023-11-07
+
+BREAKING CHANGES
 
 - Drop support for Python < 3.10
 - Drop support for Pydantic < 2
+
+Why the jump to v3? Accident that we shall live with :)
 
 ## [0.10.0] - 2023-02-17
 
