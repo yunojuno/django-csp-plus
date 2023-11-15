@@ -1,16 +1,15 @@
 [tool.poetry]
 name = "django-csp-plus"
-version = "3.0.0"
+version = "3.1"
 description = "CSP tracking and violation report endpoint."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
 maintainers = ["YunoJuno <code@yunojuno.com>"]
-readme = "README.md"
+readme = "README"
 homepage = "https://github.com/yunojuno/django-csp-plus"
 repository = "https://github.com/yunojuno/django-csp-plus"
 documentation = "https://github.com/yunojuno/django-csp-plus"
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 3.2",
@@ -29,28 +28,21 @@ packages = [{ include = "csp" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-django = "^3.2 || ^4.0 | ^5.0"
+django = "^3.2 || ^4.0 || ^5.0"
 pydantic = "*"
 
-[tool.poetry.dev-dependencies]
-black = "*"
+[tool.poetry.group.test.dependencies]
 coverage = "*"
-flake8 = "*"
-flake8-bandit = "*"
-flake8-blind-except = "*"
-flake8-docstrings = "*"
-flake8-logging-format = "*"
-flake8-print = "*"
-freezegun = "*"
-isort = "*"
-mypy = "*"
-pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-django = "*"
-# forced dependency from flake8-bandit
-pyyaml = "*"
 tox = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+mypy = "*"
+pre-commit = "*"
+ruff = "*"
 
 [build-system]
 requires = ["poetry>=0.12"]
