@@ -4,7 +4,7 @@ from csp.models import CspReport
 
 
 class Command(BaseCommand):
-    help = "Clears out CSP violation reports"
+    help = "Clears out CSP violation reports"  # noqa: A003
 
     def handle(self, *args: object, **options: object) -> None:
         count, _ = CspReport.objects.all().delete()
