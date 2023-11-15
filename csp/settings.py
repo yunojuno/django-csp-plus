@@ -142,4 +142,4 @@ def get_default_rules_expanded() -> list[tuple[str, str]]:
     """
     # Ask ChatGPT: how can I expand a dictionary of lists in python to a
     # list of tuples?
-    return [(k, v) for k, l in get_default_rules().items() for v in l]
+    return [(k, v) for k, lst in get_default_rules().items() for v in lst]

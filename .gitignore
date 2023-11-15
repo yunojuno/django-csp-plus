@@ -5,6 +5,7 @@
 *.db
 *.egg-info
 *.pyc
+dist
 node_modules
 poetry.lock
 test.db
