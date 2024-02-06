@@ -36,7 +36,10 @@ def refresh_rules_cache() -> None:
 
 
 def _dedupe(values: list[str]) -> list[str]:
-    return list({CspRule.clean_value(v) for v in values})
+    retval = {CspRule.clean_value(v) for v in values}
+    if "'none'" in retval and len(retval) > 1:
+        return list(retval - {"'none'"})
+    return list(retval)
 
 
 def _downgrade(directive: str) -> str:

@@ -4,7 +4,7 @@ import pytest
 from django.core.cache import cache
 from django.test import RequestFactory
 
-from csp.policy import CACHE_KEY_RULES, _downgrade, format_as_csp, get_csp
+from csp.policy import CACHE_KEY_RULES, _dedupe, _downgrade, format_as_csp, get_csp
 from csp.settings import CSP_REPORT_DIRECTIVE_DOWNGRADE
 
 
@@ -38,3 +38,28 @@ def test__downgrade() -> None:
     assert CSP_REPORT_DIRECTIVE_DOWNGRADE["script-src-elem"] == "script-src"
     assert _downgrade("script-src-elem") == "script-src"
     assert _downgrade("made-up-directive") == "made-up-directive"
+
+
+@pytest.mark.parametrize(
+    "input_list,output_list",
+    [
+        ([], []),
+        (["'self'"], ["'self'"]),
+        (["'none'"], ["'none'"]),
+        (["'none'", "'self'"], ["'self'"]),
+    ],
+)
+def test__dedupe(input_list: list[str], output_list: list[str]) -> None:
+    """
+    Test for console error when default-src is 'none' and has values.
+
+        The Content-Security-Policy directive 'default-src' contains the
+        keyword 'none' alongside with other source expressions. The
+        keyword 'none' must be the only source expression in the
+        directive value, otherwise it is ignored.
+
+    This same issue affects all directives that have 'none' as a value,
+    and so we fix it in the _dedupe function.
+
+    """
+    assert _dedupe(input_list) == output_list
