@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-csp-plus"
-version = "3.1"
+version = "3.1.1"
 description = "CSP tracking and violation report endpoint."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
