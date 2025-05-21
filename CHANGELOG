@@ -4,8 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## 3.2.0 - 2024-06-17
 
-- Add support for Django 5.2
 - Drop support for Django < 4.2
+- Add support for Django 5.2
+- Fix type annotation for status_code field in ReportData model
+- Update development tooling for compatibility with current versions
 
 ## 3.1.1 - 2024-01-06
 
