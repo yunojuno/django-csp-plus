@@ -66,6 +66,8 @@ jobs:
         exclude:
           - python: "3.10"
             django: "main"
+          - python: "3.11"
+            django: "main"
 
     env:
       TOXENV: django${{ matrix.django }}-py${{ matrix.python }}
