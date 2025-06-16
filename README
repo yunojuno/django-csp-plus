@@ -10,6 +10,18 @@ with a couple of alterations:
 
 The `nonce` pattern has been lifted directly.
 
+## Requirements
+
+- Django 4.2 or higher
+- Python 3.10 or higher
+
+## Changes in 3.2.0
+
+- Dropped support for Django versions below 4.2
+- Added support for Django 5.2
+- Fixed type annotation in models.py for status_code field
+- Updated tooling to work with latest versions of development tools
+
 ## History
 
 The original reason for forking this from the original was the desire to

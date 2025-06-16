@@ -34,7 +34,7 @@ class ReportData(BaseModel):
     original_policy: str | None = Field(None, alias="original-policy")
     referrer: str | None = Field(None, alias="referrer")
     script_sample: str | None = Field(None, alias="script-sample")
-    status_code: str | None = Field(0, alias="status-code")
+    status_code: str | None = Field("0", alias="status-code")
 
     @field_validator("document_uri", "blocked_uri")
     @classmethod
