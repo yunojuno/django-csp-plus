@@ -12,8 +12,8 @@ The `nonce` pattern has been lifted directly.
 
 ## Requirements
 
-- Django 4.2 or higher
-- Python 3.10 or higher
+- Python 3.12+
+- Django 5.2-6.0
 
 ## Changes in 3.2.0
 

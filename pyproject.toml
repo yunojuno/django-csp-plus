@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-csp-plus"
-version = "3.2.0"
+version = "3.3.0"
 description = "CSP tracking and violation report endpoint."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
@@ -12,21 +12,19 @@ documentation = "https://github.com/yunojuno/django-csp-plus"
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
-    "Framework :: Django :: 4.2",
-    "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 packages = [{ include = "csp" }]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-django = "^4.2 || ^5.0"
+python = "^3.12"
+django = ">=5.2,<7.0"
 pydantic = "*"
 
 [tool.poetry.group.test.dependencies]
